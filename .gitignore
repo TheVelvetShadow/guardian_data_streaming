@@ -1,3 +1,11 @@
 __pycache__/
 venv/
 
+**/.terraform.lock.hcl
+**/.terraform
+**/.terraform*
+**/function.zip
+**/*.tfstate*
+
+dependencies/
+packages/
