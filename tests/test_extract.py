@@ -5,6 +5,9 @@ import json
 from src.extract import GuardianAPI
 from unittest.mock import patch, Mock
 
+
+# ===== fixtures & variables =====
+
 # Fixture of Guardian API response used for mocking.
 @pytest.fixture
 def mock_guardian_api_response(): 
@@ -153,16 +156,14 @@ def mock_guardian_api_response():
     }
     }
 
-
 # API test key variable
-test_key = "valid-api-key"
+test_key = "test-key"
 
 
-# ===== TDD below =====
-
+# ===== TDD =====
 # test_API_Key_Validation:
 def test_guardian_api_retrieves_api_key():
-    """Tests: creates instance, stores API key, covers any None/empty keys"""
+    """Tests: accepts API key, covers any None/empty keys"""
     
     client = GuardianAPI(test_key)
     assert client.api_key == test_key
@@ -172,7 +173,9 @@ def test_guardian_api_retrieves_api_key():
         GuardianAPI(api_key="")
 
 
-# Test Search_articles method
+# ===== Search Functionality =====
+
+# Tests Search_articles GETS JSON response
 @patch('src.extract.requests')  
 def test_guardian_api_gets_article_data(mock_requests, mock_guardian_api_response):
     """Tests: that we are adding API key and pulling Guardian's JSON """
@@ -200,15 +203,40 @@ def test_guardian_api_gets_article_data(mock_requests, mock_guardian_api_respons
         }
 
     assert articles[0] == expected_article
-   
 
 
-@pytest.mark.skip
-def test_search_articles_accepts_search_terms():
+# Tests Search_articles searches via keyword
+@patch('src.extract.requests')  
+def test_search_articles_accepts_search_terms(mock_requests, mock_guardian_api_response):
     """Tests: search articles method - tests date & search terms"""
 
+    mock_response = Mock()
+    mock_response.json.return_value = mock_guardian_api_response
+    mock_requests.get.return_value = mock_response
 
-# Processing of JSON Data
+    client = GuardianAPI(test_key)
+
+    articles = client.search_articles("Warwickshire")
+    
+    expected_article = {
+            "id": "sport/live/2025/sep/24/nottinghamshire-v-warwickshire-hampshire-v-surrey-and-more-county-cricket-live",
+            "type": "liveblog",
+            "sectionId": "sport",
+            "sectionName": "Sport",
+            "webPublicationDate": "2025-09-24T11:19:26Z",
+            "webTitle": "Nottinghamshire v Warwickshire, tributes paid to Dickie Bird, and more: county cricket – live",
+            "webUrl": "https://www.theguardian.com/sport/live/2025/sep/24/nottinghamshire-v-warwickshire-hampshire-v-surrey-and-more-county-cricket-live",
+            "apiUrl": "https://content.guardianapis.com/sport/live/2025/sep/24/nottinghamshire-v-warwickshire-hampshire-v-surrey-and-more-county-cricket-live",
+            "isHosted": False,
+            "pillarId": "pillar/sport",
+            "pillarName": "Sport"
+        }
+
+    assert articles[0] == expected_article
+
+
+
+# ===== Processing of JSON Data =====
 
 @pytest.mark.skip
 @patch('src.extract.requests')
