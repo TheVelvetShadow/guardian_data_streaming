@@ -7,12 +7,20 @@ from unittest.mock import patch
 
 
 
+
 # test_API_Key_Validation:
 def test_guardian_api_retrieves_api_key():
-    """Tests: creates instance, stores API key, rejects None/empty keys"""
+    """Tests: creates instance, stores API key, covers any None/empty keys"""
+    
+    test_key = "valid-api-key"
+    client = GuardianAPI(api_key=test_key)
+    assert client.api_key == test_key
 
-
-@pytest.mark.skip 
+    # Rejects Empty
+    with pytest.raises(ValueError, match="Valid API key is required"):
+        GuardianAPI(api_key="")
+    
+   
 def test_guardian_api_gets_article_data():
     """Tests: that we are pulling Guardian's JSON """
 
