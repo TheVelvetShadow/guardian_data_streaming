@@ -17,5 +17,15 @@ class GuardianAPI:
         url = f"{self.base_url}?q={query}&api-key={self.api_key}"
         response = requests.get(url)    
         data = response.json()
-        return data["response"]["results"]
+
+        #"Creates new dict from JSON response. Provides required fields "webPublicationDate", "webTitle", "webUrl"
+        articles = data["response"]["results"][0]
+
+        response_formatted = {
+            "webPublicationDate": articles["webPublicationDate"],
+            "webTitle": articles["webTitle"],
+            "webUrl": articles["webUrl"]
+        }
+        
+        return response_formatted
     

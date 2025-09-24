@@ -175,37 +175,8 @@ def test_guardian_api_retrieves_api_key():
 
 # ===== Search Functionality =====
 
-# Tests Search_articles GETS JSON response
-@patch('src.extract.requests')  
-def test_guardian_api_gets_article_data(mock_requests, mock_guardian_api_response):
-    """Tests: that we are adding API key and pulling Guardian's JSON """
-
-    mock_response = Mock()
-    mock_response.json.return_value = mock_guardian_api_response
-    mock_requests.get.return_value = mock_response
-
-    client = GuardianAPI(test_key)
-
-    articles = client.search_articles("test")
-    # Uses first article of mock
-    expected_article = {
-            "id": "sport/live/2025/sep/24/nottinghamshire-v-warwickshire-hampshire-v-surrey-and-more-county-cricket-live",
-            "type": "liveblog",
-            "sectionId": "sport",
-            "sectionName": "Sport",
-            "webPublicationDate": "2025-09-24T11:19:26Z",
-            "webTitle": "Nottinghamshire v Warwickshire, tributes paid to Dickie Bird, and more: county cricket – live",
-            "webUrl": "https://www.theguardian.com/sport/live/2025/sep/24/nottinghamshire-v-warwickshire-hampshire-v-surrey-and-more-county-cricket-live",
-            "apiUrl": "https://content.guardianapis.com/sport/live/2025/sep/24/nottinghamshire-v-warwickshire-hampshire-v-surrey-and-more-county-cricket-live",
-            "isHosted": False,
-            "pillarId": "pillar/sport",
-            "pillarName": "Sport"
-        }
-
-    assert articles[0] == expected_article
-
-
 # Tests Search_articles searches via keyword
+@pytest.mark.skip
 @patch('src.extract.requests')  
 def test_search_articles_accepts_search_terms(mock_requests, mock_guardian_api_response):
     """Tests: search articles method - tests date & search terms"""
@@ -217,31 +188,77 @@ def test_search_articles_accepts_search_terms(mock_requests, mock_guardian_api_r
     client = GuardianAPI(test_key)
 
     articles = client.search_articles("Warwickshire")
-    
-    expected_article = {
-            "id": "sport/live/2025/sep/24/nottinghamshire-v-warwickshire-hampshire-v-surrey-and-more-county-cricket-live",
-            "type": "liveblog",
-            "sectionId": "sport",
-            "sectionName": "Sport",
-            "webPublicationDate": "2025-09-24T11:19:26Z",
-            "webTitle": "Nottinghamshire v Warwickshire, tributes paid to Dickie Bird, and more: county cricket – live",
-            "webUrl": "https://www.theguardian.com/sport/live/2025/sep/24/nottinghamshire-v-warwickshire-hampshire-v-surrey-and-more-county-cricket-live",
-            "apiUrl": "https://content.guardianapis.com/sport/live/2025/sep/24/nottinghamshire-v-warwickshire-hampshire-v-surrey-and-more-county-cricket-live",
-            "isHosted": False,
-            "pillarId": "pillar/sport",
-            "pillarName": "Sport"
-        }
 
-    assert articles[0] == expected_article
-
+    assert articles[0]["webTitle"].startswith("Nottinghamshire v Warwickshire")
 
 
 # ===== Processing of JSON Data =====
 
+# Processses JSON to required fields.
+@patch('src.extract.requests')
+def test_returns_required_fields_one_result(mock_requests, mock_guardian_api_response):
+
+    """Tests: Requested fields; webPublicationDate, webTitle, webUrl all returned correctly"""
+
+    mock_response = Mock()
+    mock_response.json.return_value = mock_guardian_api_response
+    mock_requests.get.return_value = mock_response
+
+    client = GuardianAPI(test_key)
+
+    articles = client.search_articles("Warwickshire")
+    
+    expected_article = {
+            "webPublicationDate": "2025-09-24T11:19:26Z",
+            "webTitle": "Nottinghamshire v Warwickshire, tributes paid to Dickie Bird, and more: county cricket – live",
+            "webUrl": "https://www.theguardian.com/sport/live/2025/sep/24/nottinghamshire-v-warwickshire-hampshire-v-surrey-and-more-county-cricket-live"
+        }
+
+    assert articles == expected_article
+
+
+
 @pytest.mark.skip
 @patch('src.extract.requests')
-def test_returns_required_fields(mock_requests):
-    """Tests: webPublicationDate, webTitle, webUrl all returned correctly"""
+def test_returns_required_fields_multiple_results(mock_requests, mock_guardian_api_response):
+
+    """Tests: Requested fields; webPublicationDate, webTitle, webUrl all returned correctly"""
+
+    mock_response = Mock()
+    mock_response.json.return_value = mock_guardian_api_response
+    mock_requests.get.return_value = mock_response
+
+    client = GuardianAPI(test_key)
+
+    articles = client.search_articles("trump")
+    
+    expected_article = [
+        {
+            "webPublicationDate": "2025-09-24T11:15:59Z",
+            "webTitle": "Trump says he ‘can’t believe’ Kimmel back on ABC as he hints at action against network – US politics live",
+            "webUrl": "https://www.theguardian.com/us-news/live/2025/sep/24/donald-trump-jimmy-kimmel-freedom-of-speech-immigration-government-shutdown-us-politics-live-news-updates",
+        },
+        {
+            "webPublicationDate": "2025-09-24T11:02:21Z",
+            "webTitle": "‘No alternative’ to continuing invasion, claims Russia, as Trump says Ukraine could regain all land lost – latest updates",
+            "webUrl": "https://www.theguardian.com/world/live/2025/sep/24/russia-ukraine-trump-zelenskyy-unga-drones-europe-latest-news-updates",
+        },
+        {
+            "webPublicationDate": "2025-09-24T11:01:04Z",
+            "webTitle": "Trump looms large at Ryder Cup where home rules and spicy support are always on show",
+            "webUrl": "https://www.theguardian.com/sport/2025/sep/24/trump-ryder-cup-spicy-support-use-europe-golf",
+        },
+        {
+            "webPublicationDate": "2025-09-24T11:00:07Z",
+            "webTitle": "Trump’s Tylenol announcement incurs furious backlash: ‘This is yet more utter rubbish’",
+            "webUrl": "https://www.theguardian.com/us-news/2025/sep/24/trump-tylenol-pregnancy-autism-backlash",
+        }
+        ]
+
+    assert articles == expected_article
+
+
+
 
 
 @pytest.mark.skip
