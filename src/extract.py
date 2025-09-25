@@ -10,14 +10,15 @@ class GuardianAPI:
             if not api_key:
                 raise ValueError("Valid API key is required")
             self.api_key = api_key
-            self.base_url = "https://content.guardianapis.com/search"
+            # page-size limits to 10 articles as per brief
+            self.base_url = "https://content.guardianapis.com/search?order-by=newest&page-size=10"
 
 
     def search_articles(self, query=str):
 
         # Adds API Key & Search Query to base url
         if query:
-            url = f"{self.base_url}?q={query}&api-key={self.api_key}"
+            url = f"{self.base_url}&q={query}&api-key={self.api_key}"
         else:
             url = f"{self.base_url}?api-key={self.api_key}"
 
