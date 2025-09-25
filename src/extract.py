@@ -14,18 +14,30 @@ class GuardianAPI:
 
 
     def search_articles(self, query=str):
-        url = f"{self.base_url}?q={query}&api-key={self.api_key}"
+
+        # Adds API Key & Search Query to base url
+        if query:
+            url = f"{self.base_url}?q={query}&api-key={self.api_key}"
+        else:
+            url = f"{self.base_url}?api-key={self.api_key}"
+
+        # Requests JSON response from API and presents in list of dictionaries
         response = requests.get(url)    
         data = response.json()
+        results = data["response"]["results"]
 
-        #"Creates new dict from JSON response. Provides required fields "webPublicationDate", "webTitle", "webUrl"
-        articles = data["response"]["results"][0]
+        # Formats JSON data
+        # Creates new dict from JSON response. 
+        # Provides required fields "webPublicationDate", "webTitle", "webUrl"
+        formatted_articles = []
 
-        response_formatted = {
-            "webPublicationDate": articles["webPublicationDate"],
-            "webTitle": articles["webTitle"],
-            "webUrl": articles["webUrl"]
-        }
-        
-        return response_formatted
+        for article in results:
+            formatted_articles.append({
+            "webPublicationDate": article["webPublicationDate"],
+            "webTitle": article["webTitle"],
+            "webUrl": article["webUrl"]
+        })
+       
+        return formatted_articles
+    
     
