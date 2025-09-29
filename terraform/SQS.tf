@@ -10,7 +10,6 @@ resource "aws_sqs_queue" "guardian_articles_queue" {
   tags = {
     Name        = "${var.project_name}_articles_queue"
     Project     = var.project_name
-    Retention   = "3_
-    days"
+    Retention   = "3_days"
   }
 }

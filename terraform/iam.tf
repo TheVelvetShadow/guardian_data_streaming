@@ -1,3 +1,16 @@
+data "aws_iam_policy_document" "lambda_assume_role_policy" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
 # Extract Lambda Role (gets Guardian articles, sends to SQS)
 resource "aws_iam_role" "extract_lambda_role" {
   name                  = "${var.project_name}-extract-lambda-role"
