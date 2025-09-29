@@ -19,13 +19,43 @@ data "archive_file" "load_lambda" {
 } 
 
 
-#################### CREATE THE LAMBDA FUNCTIONS ########################################
+#################### LAMBDA FUNCTIONS ########################################
 
-# Extract_lambda (writes to Kinesis)
+# Extract_lambda (writes to SQS)
+resource "aws_lambda_function" "extract_lambda" {
+  filename         = data.archive_file.extract_lambda.output_path
+  function_name    = "${var.project_name}-extract"
+  role            = aws_iam_role.extract_lambda_role.arn
+  handler         = "extract.lambda_handler"
+  # Changes hash so Terraform detects and deploys code changes
+  source_code_hash = data.archive_file.extract_lambda.output_base64sha256
+  runtime         = var.lambda_runtime
+  timeout         = var.lambda_timeout
+  memory_size     = var.lambda_memory
+
+  environment {
+    variables = {
+      SQS_QUEUE_URL    = aws_sqs_queue.guardian_articles_queue.url
+      GUARDIAN_API_KEY = var.guardian_api_key
+      AWS_REGION_NAME  = data.aws_region.current.name
+    }
+  }
+
+  tags = {
+    Name        = "Extract Lambda"
+    Project     = var.project_name
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.extract_lambda_logging,
+    aws_iam_role_policy_attachment.extract_lambda_sqs_send
+  ]
+}
 
 
+# Transform_lambda (reads from SQS, triggered by events)
 
-# Transform_lambda (reads from Kinesis, triggered by events)
+
 
 
 # Load_lambda (destination for transformed data)

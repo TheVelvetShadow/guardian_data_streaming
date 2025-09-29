@@ -44,7 +44,11 @@ variable "lambda_memory" {
 }
 
 #  lambda_runtime (string) - Python version "python3.9"
-
+variable "lambda_runtime" {
+  description = "Python runtime version for Lambda functions"
+  type        = string
+  default     = "python3.9"
+}
 
 #  extract_lambda_name (string) - Name for extract function
 
@@ -58,6 +62,13 @@ variable "lambda_memory" {
 ##### API Variables #####
 
 # guardian_api_key (string, sensitive) - Guardian API key
+
+variable "guardian_api_key" {
+  description = "The Guardian API key"
+  type        = string
+  sensitive   = true
+}
+
 # api_rate_limit (number) - Max requests per day (50)
 
 

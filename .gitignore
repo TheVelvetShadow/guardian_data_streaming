@@ -6,6 +6,6 @@ venv/
 **/.terraform*
 **/function.zip
 **/*.tfstate*
-
+terraform.tfvars
 dependencies/
 packages/
