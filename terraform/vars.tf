@@ -1,34 +1,33 @@
+#### Project Vars #####
 
-##### Kinesis Vars #####
-
-variable "kinesis_retention_hours" {
-  description = "Kinesis data retention in hours"
-  type        = number
-  default     = 72  # 3 days as per brief
-}
-
-variable "kinesis_stream_name" {
-  description = "Name of the Kinesis data stream"
+variable "project_name" {
+  description = "Guardian API Streaming"
   type        = string
-  default     = "guardian-articles-stream"
+  default     = "guardian-streaming"
 }
 
-# Stream performance/cost
-variable "kinesis_shard_count" {
-  description = "Number of shards for the Kinesis stream"
+
+##### SQS Vars #####
+
+variable "sqs_retention_seconds" {
+  description = "SQS message retention period in seconds (3 days as per brief)"
   type        = number
-  default     = 1  # Single shard handles up to 1,000 records/sec or 1MB/sec
+  default     = 259200  # 3 days (72 hours * 3600 seconds)
   
-  # Limit to avoid too many shards being set
   validation {
-    condition     = var.kinesis_shard_count >= 1 && var.kinesis_shard_count <= 3
-    error_message = "Shard count must be between 1 and 3 for cost control."
+    condition     = var.sqs_retention_seconds >= 60 && var.sqs_retention_seconds <= 1209600
+    error_message = "SQS retention must be between 60 seconds (1 min) and 1209600 seconds (14 days)."
   }
+}
+
+variable "sqs_queue_name" {
+  description = "Name of the SQS queue (will be prefixed with project name)"
+  type        = string
+  default     = "guardian-articles-queue"
 }
 
 
 ##### Lambda Vars #####
-
 
 #  lambda_timeout (number) - Function timeout in seconds (default 300)
 variable "lambda_timeout" {
@@ -54,12 +53,6 @@ variable "lambda_memory" {
 
 
 #  load_lambda_name (string) - Name for load function
-
-
-##### IAM Vars #####
-
-
-
 
 
 ##### API Variables #####
