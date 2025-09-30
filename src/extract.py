@@ -60,6 +60,12 @@ def lambda_handler(event, context):
     # Applies Search term 
     api.search_articles(search_term)
 
+    # Creates SQS client
+    sqs = boto3.client('sqs')
+
     # Send search result to SQS
+
+
     # sqs_queue_url = os.environ['SQS_QUEUE_URL']
+    
     

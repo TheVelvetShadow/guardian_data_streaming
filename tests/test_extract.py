@@ -267,6 +267,7 @@ def test_returns_required_fields_multiple_results(mock_requests, mock_guardian_a
         assert articles == expected_article
 
 
+
 ###### Lambda Handler Tests ######
 
 
@@ -327,8 +328,64 @@ def test_lambda_handler_default_search(mock_get, _mock_boto, mock_guardian_api_o
         assert '&q=Northcoders' in called_url
 
 
-# def test_lambda_handler_sends_single_articles_to_sqs()
+
+
+@patch('src.extract.boto3.client')
+@patch.dict('os.environ', {'GUARDIAN_API_KEY': 'test-key', 'SQS_QUEUE_URL': 'test-queue'})
+@patch('src.extract.requests.get')
+def test_lambda_handler_creates_sqs_client(_mock_get, mock_boto):
+    # boto3 will create a mock instance of SQS 
+    # Arrange
+    event = {'search_term': 'Warickshire'}
+
+    #Act
+    lambda_handler(event, None)
+
+    #Assert
+    mock_boto.assert_called_once_with('sqs')
+
+
+
+# @patch('src.extract.boto3.client')
+# @patch.dict('os.environ', {'GUARDIAN_API_KEY': 'test-key', 'SQS_QUEUE_URL': 'test-queue'})
+# @patch('src.extract.requests.get')
+# def test_lambda_handler_calls_send_message(mock_get, mock_boto, mock_guardian_api_one_response):
+
+
+
+
+@pytest.mark.skip
+@patch('src.extract.boto3.client')
+@patch.dict('os.environ', {'GUARDIAN_API_KEY': 'test-key', 'SQS_QUEUE_URL': 'test-queue'})
+@patch('src.extract.requests.get')
+def test_lambda_handler_sends_single_articles_to_sqs(mock_get, mock_boto, mock_guardian_api_one_response):
+     
+    # Arrange
+    mock_response = Mock()
+    mock_response.json.return_value = mock_guardian_api_one_response
+    mock_get.return_value = mock_response
+    
+    # Create mock SQS Client
+    mock_sqs_client = Mock()
+    mock_boto.return_value = mock_sqs_client
+
+    #Act
+    event = {'search_term': 'Warickshire'}
+    lambda_handler(event, None)
+
+    #Assert
+    #Checks SQS created
+    mock_boto.assert_called_once_with('sqs')
+
+    single_message = mock_sqs_client.send_message.call_args[1]
+
+    assert single_message == mock_guardian_api_one_response     
+
+
+
 
 # test_lambda_handler_sends_multiple_articles_to_sqs()
+
+# test_lambda_handler_returns_success_response():
 
 # test_error_handling - need to define what this is. 
