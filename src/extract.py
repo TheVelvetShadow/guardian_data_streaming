@@ -3,6 +3,7 @@ import json
 from datetime import datetime
 import pprint
 import os
+import boto3
 
 class GuardianAPI:
 
@@ -47,19 +48,19 @@ class GuardianAPI:
 
 # Lambda Handler - Gets Guardian articles and publishes to SQS queue
 def lambda_handler(event, context):
-    
     # Gets API Key
-    api_key = os.environ.get('GUARDIAN_API_KEY') 
+    api_key = os.environ['GUARDIAN_API_KEY']
     
     # Calls Guardian API Class & Applies API Key
     api = GuardianAPI(api_key)
     
     # Gets Search term, provides empty as default
     search_term = event.get('search_term', '') 
-
-    # Applies Search term 
     api.search_articles(search_term)
 
-    # Send search result to SQS
-    sqs_queue_url = os.environ['SQS_QUEUE_URL']
+    # Applies Search term 
+    # api.search_articles(search_term)
 
+    # Send search result to SQS
+    # sqs_queue_url = os.environ['SQS_QUEUE_URL']
+    
