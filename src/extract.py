@@ -58,14 +58,28 @@ def lambda_handler(event, context):
     search_term = event.get('search_term', 'Northcoders') 
 
     # Applies Search term 
-    api.search_articles(search_term)
+    articles = api.search_articles(search_term)
 
     # Creates SQS client
     sqs = boto3.client('sqs')
 
     # Send search result to SQS
+    # send_message needs Queue url to send message to
+    queue_url = os.environ.get('SQS_QUEUE_URL')
+    # create SQS Queue
+
+    # Define message to be sent to SQS (article data as JSON string)
+    for article in articles:
+        message_body = json.dumps({
+            'webPublicationDate': article['webPublicationDate'],
+            'webTitle': article['webTitle'],
+            'webUrl': article['webUrl']
+        })
+        # send message to Q
+        sqs.send_message(QueueUrl=queue_url, MessageBody=message_body)
 
 
-    # sqs_queue_url = os.environ['SQS_QUEUE_URL']
+
+   
     
     

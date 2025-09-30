@@ -346,10 +346,25 @@ def test_lambda_handler_creates_sqs_client(_mock_get, mock_boto):
 
 
 
-# @patch('src.extract.boto3.client')
-# @patch.dict('os.environ', {'GUARDIAN_API_KEY': 'test-key', 'SQS_QUEUE_URL': 'test-queue'})
-# @patch('src.extract.requests.get')
-# def test_lambda_handler_calls_send_message(mock_get, mock_boto, mock_guardian_api_one_response):
+@patch('src.extract.boto3.client')
+@patch('src.extract.requests.get')
+@patch.dict('os.environ', {'GUARDIAN_API_KEY': 'test-key', 'SQS_QUEUE_URL': 'test-queue'})
+def test_lambda_handler_calls_send_message(mock_get, mock_boto, mock_guardian_api_one_response):
+    # Arrange
+    mock_response = Mock()
+    mock_response.json.return_value = mock_guardian_api_one_response
+    mock_get.return_value = mock_response
+
+    event = {'search_term': 'Warickshire'}
+
+    mock_sqs_client = Mock()
+    mock_boto.return_value = mock_sqs_client 
+
+    #Act
+    lambda_handler(event, None)
+
+    #Assert
+    assert mock_sqs_client.send_message.call_count == 1
 
 
 
