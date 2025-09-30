@@ -54,12 +54,11 @@ def lambda_handler(event, context):
     # Calls Guardian API Class & Applies API Key
     api = GuardianAPI(api_key)
     
-    # Gets Search term, provides empty as default
-    search_term = event.get('search_term', '') 
-    api.search_articles(search_term)
+    # Gets Search term, provides Northcoders as default
+    search_term = event.get('search_term', 'Northcoders') 
 
     # Applies Search term 
-    # api.search_articles(search_term)
+    api.search_articles(search_term)
 
     # Send search result to SQS
     # sqs_queue_url = os.environ['SQS_QUEUE_URL']

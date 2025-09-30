@@ -271,7 +271,7 @@ def test_returns_required_fields_multiple_results(mock_requests, mock_guardian_a
 
 
 @patch('src.extract.boto3.client')
-@patch.dict('os.environ', {'GUARDIAN_API_KEY': 'test-key', 'SQS_QUEUE_URL': 'test-queue'})
+@patch.dict('os.environ', {'GUARDIAN_API_KEY': 'test-key'})
 @patch('src.extract.requests.get')
 def test_lambda_handler_adds_api_key(mock_get, _mock_boto, mock_guardian_api_one_response):
     # Arrange
@@ -288,8 +288,10 @@ def test_lambda_handler_adds_api_key(mock_get, _mock_boto, mock_guardian_api_one
     assert "&api-key=test-key" in called_url
     
 
-@pytest.mark.skip
-def test_lambda_handler_uses_search_term_from_event(mock_get):
+@patch('src.extract.boto3.client')
+@patch.dict('os.environ', {'GUARDIAN_API_KEY': 'test-key'})
+@patch('src.extract.requests.get')
+def test_lambda_handler_uses_search_term_from_event(mock_get, _mock_boto, mock_guardian_api_one_response):
     
     # Arrange
         mock_response = Mock()
@@ -305,17 +307,27 @@ def test_lambda_handler_uses_search_term_from_event(mock_get):
         assert '&q=Warickshire' in called_url
 
         
-
-# test_lambda_handler_default_search():
+@patch('src.extract.boto3.client')
+@patch.dict('os.environ', {'GUARDIAN_API_KEY': 'test-key'})
+@patch('src.extract.requests.get')
+def test_lambda_handler_default_search(mock_get, _mock_boto, mock_guardian_api_one_response):
     
-        # mock_get.reset_mock()
-        # lambda_handler({}, None)
-        
-        # called_url = mock_get.call_args[0][0]
-        # assert '&q=Northcoders' in called_url
+        # Arrange
+        mock_response = Mock()
+        mock_response.json.return_value = mock_guardian_api_one_response
+        mock_get.return_value = mock_response
+
+        #Act
+        #passed empty search to trigger default search
+        event = {}
+        lambda_handler(event, None)
+
+        #Assert
+        called_url = mock_get.call_args[0][0]
+        assert '&q=Northcoders' in called_url
 
 
-# test_lambda_handler_sends_multiple_articles_to_sqs()
+# def test_lambda_handler_sends_single_articles_to_sqs()
 
 # test_lambda_handler_sends_multiple_articles_to_sqs()
 
