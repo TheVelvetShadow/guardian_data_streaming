@@ -22,9 +22,9 @@ data "archive_file" "load_lambda" {
 #################### LAMBDA FUNCTIONS ########################################
 
 # Extract_lambda (writes to SQS)
-resource "aws_lambda_function" "extract_lambda" {
+resource "aws_lambda_function" "guardian_lambda" {
   filename         = data.archive_file.extract_lambda.output_path
-  function_name    = "${var.project_name}-extract"
+  function_name    = "${var.project_name}"
   role            = aws_iam_role.extract_lambda_role.arn
   handler         = "extract.lambda_handler"
   # Changes hash so Terraform detects and deploys code changes
@@ -42,32 +42,15 @@ resource "aws_lambda_function" "extract_lambda" {
   }
 
   tags = {
-    Name        = "Extract Lambda"
+    Name        = "Guardian API to SQS"
     Project     = var.project_name
   }
 
-  depends_on = [
-    aws_iam_role_policy_attachment.extract_lambda_logging,
-    aws_iam_role_policy_attachment.extract_lambda_sqs_send
+   depends_on = [
+    aws_iam_role_policy_attachment.guardian_lambda_logging,
+    aws_iam_role_policy_attachment.guardian_lambda_sqs_send
   ]
+
 }
 
-
-# Transform_lambda (reads from SQS, triggered by events)
-
-
-
-
-# Load_lambda (destination for transformed data)
-
-
-
-# Each lambda needs:
-# filename (from archive_file)
-# function_name (use variables)
-# role (from iam.tf)  
-# handler (extract.lambda_handler, transform.lambda_handler, load.lambda_handler)
-# runtime = var.lambda_runtime
-# timeout = var.lambda_timeout
-# memory_size = var.lambda_memory
-# environment variables 
+ # CloudWatch

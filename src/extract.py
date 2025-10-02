@@ -50,7 +50,7 @@ class GuardianAPI:
 def lambda_handler(event, context):
     # Gets API Key
     api_key = os.environ['GUARDIAN_API_KEY']
-    
+
     # Calls Guardian API Class & Applies API Key
     api = GuardianAPI(api_key)
     

@@ -1,7 +1,7 @@
 #### Project Vars #####
 
 variable "project_name" {
-  description = "Guardian API Streaming"
+  description = "Guardian API"
   type        = string
   default     = "guardian-streaming"
 }
@@ -50,13 +50,6 @@ variable "lambda_runtime" {
   default     = "python3.9"
 }
 
-#  extract_lambda_name (string) - Name for extract function
-
-
-#  transform_lambda_name (string) - Name for transform function
-
-
-#  load_lambda_name (string) - Name for load function
 
 
 ##### API Variables #####

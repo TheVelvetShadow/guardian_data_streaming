@@ -13,3 +13,13 @@ resource "aws_sqs_queue" "guardian_articles_queue" {
     Retention   = "3_days"
   }
 }
+
+output "sqs_queue_url" {
+  value       = aws_sqs_queue.guardian_articles_queue.url
+  description = "URL of SQS queue for Guardian articles"
+}
+
+output "sqs_queue_arn" {
+  value       = aws_sqs_queue.guardian_articles_queue.arn
+  description = "ARN of SQS queue"
+}
