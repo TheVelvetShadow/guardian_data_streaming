@@ -65,8 +65,8 @@ def lambda_handler(event, context):
 
     # Send search result to SQS
     # send_message needs Queue url to send message to
-    queue_url = os.environ.get('SQS_QUEUE_URL')
     # create SQS Queue
+    queue_url = os.environ.get('SQS_QUEUE_URL')
 
     # Define message to be sent to SQS (article data as JSON string)
     for article in articles:

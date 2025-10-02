@@ -328,8 +328,6 @@ def test_lambda_handler_default_search(mock_get, _mock_boto, mock_guardian_api_o
         assert '&q=Northcoders' in called_url
 
 
-
-
 @patch('src.extract.boto3.client')
 @patch.dict('os.environ', {'GUARDIAN_API_KEY': 'test-key', 'SQS_QUEUE_URL': 'test-queue'})
 @patch('src.extract.requests.get')
@@ -345,11 +343,10 @@ def test_lambda_handler_creates_sqs_client(_mock_get, mock_boto):
     mock_boto.assert_called_once_with('sqs')
 
 
-
 @patch('src.extract.boto3.client')
 @patch('src.extract.requests.get')
 @patch.dict('os.environ', {'GUARDIAN_API_KEY': 'test-key', 'SQS_QUEUE_URL': 'test-queue'})
-def test_lambda_handler_calls_send_message(mock_get, mock_boto, mock_guardian_api_one_response):
+def test_lambda_handler_creates_SQS_queue(mock_get, mock_boto, mock_guardian_api_one_response):
     # Arrange
     mock_response = Mock()
     mock_response.json.return_value = mock_guardian_api_one_response
@@ -362,19 +359,36 @@ def test_lambda_handler_calls_send_message(mock_get, mock_boto, mock_guardian_ap
 
     #Act
     lambda_handler(event, None)
+    call_kwargs = mock_sqs_client.send_message.call_args.kwargs
 
+    #Assert
+    assert call_kwargs['QueueUrl'] == 'test-queue'
+
+
+
+    # Arrange
+    mock_response = Mock()
+    mock_response.json.return_value = mock_guardian_api_one_response
+    mock_get.return_value = mock_response
+
+    event = {'search_term': 'Warickshire'}
+
+    mock_sqs_client = Mock()
+    mock_boto.return_value = mock_sqs_client 
+
+    #Act
+    lambda_handler(event, None)
+    
     #Assert
     assert mock_sqs_client.send_message.call_count == 1
 
 
-
-
-@pytest.mark.skip
 @patch('src.extract.boto3.client')
 @patch.dict('os.environ', {'GUARDIAN_API_KEY': 'test-key', 'SQS_QUEUE_URL': 'test-queue'})
 @patch('src.extract.requests.get')
-def test_lambda_handler_sends_single_articles_to_sqs(mock_get, mock_boto, mock_guardian_api_one_response):
-     
+# Tests the SQS recieves & sends single message 
+def test_lambda_handler_sends_single_article_result_to_sqs(mock_get, mock_boto, mock_guardian_api_one_response):
+
     # Arrange
     mock_response = Mock()
     mock_response.json.return_value = mock_guardian_api_one_response
@@ -388,16 +402,19 @@ def test_lambda_handler_sends_single_articles_to_sqs(mock_get, mock_boto, mock_g
     event = {'search_term': 'Warickshire'}
     lambda_handler(event, None)
 
+    call_args = mock_sqs_client.send_message.call_args.kwargs
+    sent_message_string = call_args['MessageBody']
+    # converts string to JSON for assertions below
+    sent_message = json.loads(sent_message_string)
+
+    # this is inc. instead of hardcoding results as leads to unicoding issue.
+    expected_article = mock_guardian_api_one_response['response']['results'][0]
+
     #Assert
-    #Checks SQS created
-    mock_boto.assert_called_once_with('sqs')
-
-    single_message = mock_sqs_client.send_message.call_args[1]
-
-    assert single_message == mock_guardian_api_one_response     
-
-
-
+    assert mock_sqs_client.send_message.call_count == 1
+    assert sent_message['webPublicationDate'] == expected_article['webPublicationDate']
+    assert sent_message['webTitle'] == expected_article['webTitle']
+    assert sent_message['webUrl'] == expected_article['webUrl']
 
 # test_lambda_handler_sends_multiple_articles_to_sqs()
 
