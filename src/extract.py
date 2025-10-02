@@ -69,6 +69,7 @@ def lambda_handler(event, context):
     queue_url = os.environ.get('SQS_QUEUE_URL')
 
     # Define message to be sent to SQS (article data as JSON string)
+    # This sends one SQS message per Article
     for article in articles:
         message_body = json.dumps({
             'webPublicationDate': article['webPublicationDate'],
@@ -78,8 +79,8 @@ def lambda_handler(event, context):
         # send message to Q
         sqs.send_message(QueueUrl=queue_url, MessageBody=message_body)
 
-
-
+    # Provides read out of succesful function execution
+    return {'statusCode': 200, 'body': 'Success'}
    
     
     

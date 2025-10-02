@@ -416,8 +416,60 @@ def test_lambda_handler_sends_single_article_result_to_sqs(mock_get, mock_boto, 
     assert sent_message['webTitle'] == expected_article['webTitle']
     assert sent_message['webUrl'] == expected_article['webUrl']
 
-# test_lambda_handler_sends_multiple_articles_to_sqs()
 
-# test_lambda_handler_returns_success_response():
+@patch('src.extract.boto3.client')
+@patch.dict('os.environ', {'GUARDIAN_API_KEY': 'test-key', 'SQS_QUEUE_URL': 'test-queue'})
+@patch('src.extract.requests.get')
+def test_lambda_handler_sends_multiple_articles_to_sqs(mock_get, mock_boto, mock_guardian_api_multiple_responses):
+# Arrange
+    mock_response = Mock()
+    mock_response.json.return_value = mock_guardian_api_multiple_responses
+    mock_get.return_value = mock_response
+    
+    # Create mock SQS Client
+    mock_sqs_client = Mock()
+    mock_boto.return_value = mock_sqs_client
+
+    #Act
+    event = {'search_term': 'Trump'}
+    lambda_handler(event, None)
+
+    call_args = mock_sqs_client.send_message.call_args.kwargs
+    sent_message_string = call_args['MessageBody']
+    # converts string to JSON for assertions below
+    sent_message = json.loads(sent_message_string)
+
+    # Testing for last result in API results
+    expected_article = mock_guardian_api_multiple_responses['response']['results'][3]
+
+    #Assert
+    assert mock_sqs_client.send_message.call_count >= 2
+    assert sent_message['webPublicationDate'] == expected_article['webPublicationDate']
+    assert sent_message['webTitle'] == expected_article['webTitle']
+    assert sent_message['webUrl'] == expected_article['webUrl']
+
+
+@patch('src.extract.boto3.client')
+@patch('src.extract.requests.get')
+@patch.dict('os.environ', {'GUARDIAN_API_KEY': 'test-key', 'SQS_QUEUE_URL': 'test-queue'})
+def test_lambda_handler_returns_success_response(mock_get, mock_boto, mock_guardian_api_one_response):
+    """Test that lambda handler returns a success response"""
+    
+    # Arrange
+    mock_response = Mock()
+    mock_response.json.return_value = mock_guardian_api_one_response
+    mock_response.status_code = 200
+    mock_get.return_value = mock_response
+    
+    mock_sqs_client = Mock()
+    mock_boto.return_value = mock_sqs_client
+    
+    # Act
+    event = {'search_term': 'Warwickshire'}
+    result = lambda_handler(event, None)
+    
+    # Assert
+    assert result['statusCode'] == 200
+    assert 'body' in result
 
 # test_error_handling - need to define what this is. 
