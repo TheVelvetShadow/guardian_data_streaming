@@ -54,9 +54,7 @@ resource "aws_sns_topic_subscription" "email_alert" {
 # Log Metric Filter to count API calls
 resource "aws_cloudwatch_log_metric_filter" "guardian_api_calls" {
   name           = "guardian_api_call_count"
-  
-  # double check this pattern in cloudwatch
-  pattern        = "Making Guardian API request"
+  pattern        = "Making Guardian API call"
   log_group_name = aws_cloudwatch_log_group.guardian_lambda_logs.name
 
   metric_transformation {

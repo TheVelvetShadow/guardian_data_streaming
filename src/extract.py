@@ -53,27 +53,20 @@ logger.setLevel(logging.INFO)
 def lambda_handler(event, context):
     try:
         logger.info("Starting Guardian Pipeline")    
-        # Gets API Key
-        api_key = os.environ['GUARDIAN_API_KEY']
-
-        # Calls Guardian API Class & Applies API Key
-        api = GuardianAPI(api_key)
         
-        # Gets Search term, provides Northcoders as default
+        # Connects & searches Guardian API
+        api_key = os.environ['GUARDIAN_API_KEY']
+        api = GuardianAPI(api_key)
         search_term = event.get('search_term', 'Northcoders') 
-
-        # Applies Search term 
         articles = api.search_articles(search_term)
 
-        # Creates SQS client
+        #logs for API Limit in CLoudwatch
+        logger.info("Making Guardian API call")  
+        
+        # Creates SQS client & Message Queue
         sqs = boto3.client('sqs')
-
-        # Send search result to SQS
-        # send_message needs Queue url to send message to
-        # create SQS Queue
         queue_url = os.environ.get('SQS_QUEUE_URL')
 
-        # Define message to be sent to SQS (article data as JSON string)
         # This sends one SQS message per Article
         for article in articles:
             message_body = json.dumps({
@@ -81,9 +74,9 @@ def lambda_handler(event, context):
                 'webTitle': article['webTitle'],
                 'webUrl': article['webUrl']
             })
-            # send message to Q
             sqs.send_message(QueueUrl=queue_url, MessageBody=message_body)
 
+        
         # Provides read out of succesful function execution
         return {'statusCode': 200, 'body': 'Success'}
     

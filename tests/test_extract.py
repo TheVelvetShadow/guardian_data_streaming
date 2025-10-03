@@ -465,34 +465,88 @@ def test_lambda_handler_has_logger_setup():
 
 
 # Test that errors are logged with "ERROR" keyword
+@patch('src.extract.logger')
 @patch('src.extract.GuardianAPI')
 @patch('src.extract.boto3.client')
-def test_lambda_handler_logs_error_on_api_failure(_mock_boto, mock_guardian_api):
-    """Test: When API fails, Lambda logs 'ERROR' keyword"""
-    
+def test_lambda_handler_logs_error_on_api_failure(_mock_boto, mock_guardian_api, mock_logger): 
     # Arrange 
     # create a mock to make API throw exception using .side_effect - 
     # Requests will deal with Exception generation when live
-    mock_api_instance = Mock()
-    mock_api_instance.search_articles.side_effect = Exception("API connection failed")
-    mock_guardian_api.return_value = mock_api_instance
-    
+    mock_response = Mock()
+    mock_response.search_articles.side_effect = Exception("API connection failed")
+    mock_guardian_api.return_value = mock_response    
     event = {'search_term': 'test'}
     context = {}
     
     # Check that error is logged
-    with patch('src.extract.logger') as mock_logger:
-        with pytest.raises(Exception):
-            lambda_handler(event, context)
+    with pytest.raises(Exception):
+        lambda_handler(event, context)
         
-        # Verify logger.error was called with text containing failure info
-        mock_logger.error.assert_called()
-        error_message = mock_logger.error.call_args[0][0]
-        
-        # CloudWatch filter looks "Failed"
-        assert "failed" in error_message.lower() 
+    # Verify logger.error has text containing failure info
+    mock_logger.error.assert_called()
+    error_message = mock_logger.error.call_args[0][0]
+    assert "failed" in error_message.lower() 
+    # Note - CloudWatch filters logs for "Failed"
 
-# SQS message failure
+
+# SQS message failure gets logged for Cloudwatch & error handling
+@patch('src.extract.logger') 
+@patch('src.extract.GuardianAPI')
+@patch('src.extract.boto3.client')
+@patch.dict('os.environ', {'GUARDIAN_API_KEY': 'test-key', 'SQS_QUEUE_URL': 'test-queue'})
+def test_lambda_handler_logs_error_on_sqs_failure(mock_boto, mock_guardian_api, mock_logger):
+    
+    # API succeeds, SQS fails
+    mock_response = Mock()
+    mock_response.search_articles.return_value = test_articles = [
+        {
+            'webPublicationDate': '2025-01-01T12:00:00Z',
+            'webTitle': 'Test Article',
+            'webUrl': 'https://example.com'
+        }
+    ]
+    mock_guardian_api.return_value = mock_response
+    
+    mock_sqs = Mock()
+    mock_sqs.send_message.side_effect = Exception("SQS queue unavailable")
+    mock_boto.return_value = mock_sqs
+    
+    event = {'search_term': 'test'}
+    context = {}
+    
+    with pytest.raises(Exception):
+        lambda_handler(event, context)
+    
+    mock_logger.error.assert_called_once()
+    
+    error_message = mock_logger.error.call_args[0][0]
+    assert "sqs queue unavailable" in error_message.lower()
+
 
 # API rate & Error messages logged
-# test_lambda_handler_logs_API_calls_
+# Unsure if the API throttling is needed?
+@patch('src.extract.logger')
+@patch('src.extract.GuardianAPI')
+@patch('src.extract.boto3.client')
+@patch.dict('os.environ', {'GUARDIAN_API_KEY': 'test-key', 'SQS_QUEUE_URL': 'test-queue'})
+def test_lambda_handler_logs_api_request(_mock_boto, mock_guardian_api, mock_logger):
+    mock_response = Mock()
+    mock_guardian_api.return_value = mock_response  
+    mock_response.search_articles.return_value = [
+        {
+            'webPublicationDate': '2025-01-01T12:00:00Z',
+            'webTitle': 'Test Article',
+            'webUrl': 'https://example.com'
+        }
+    ]  
+    
+    event = {'search_term': 'test'}
+    context = {}
+    lambda_handler(event, context)
+        
+    # Verify API call made
+    message = mock_logger.info.call_args_list[1][0]
+    assert "Making Guardian API call" in message
+    # Note - CloudWatch API filters logs for pattern "Making Guardian API call"
+
+

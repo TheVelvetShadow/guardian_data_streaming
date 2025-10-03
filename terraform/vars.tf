@@ -54,19 +54,17 @@ variable "lambda_runtime" {
 
 ##### API Variables #####
 
-# guardian_api_key (string, sensitive) - Guardian API key
+# variable "guardian_api_key" {
+#   description = "The Guardian API key"
+#   type        = string
+#   sensitive   = true
+# }
 
-variable "guardian_api_key" {
-  description = "The Guardian API key"
-  type        = string
-  sensitive   = true
-}
-
-# api_rate_limit (number) - Max requests per day (50)
+# api_rate_limit - Max requests per day (500)
 variable "guardian_api_rate_limit" {
   description = "Guardian API daily call limit"
   type        = number
-  default     = 50
+  default     = 500
 }
 
 
