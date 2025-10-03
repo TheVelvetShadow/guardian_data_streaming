@@ -463,7 +463,36 @@ def test_lambda_handler_has_logger_setup():
     assert logger is not None
     assert logger.level == logging.INFO
 
-# test_lambda_logs_error_messages():
+
+# Test that errors are logged with "ERROR" keyword
+@patch('src.extract.GuardianAPI')
+@patch('src.extract.boto3.client')
+def test_lambda_handler_logs_error_on_api_failure(_mock_boto, mock_guardian_api):
+    """Test: When API fails, Lambda logs 'ERROR' keyword"""
+    
+    # Arrange 
+    # create a mock to make API throw exception using .side_effect - 
+    # Requests will deal with Exception generation when live
+    mock_api_instance = Mock()
+    mock_api_instance.search_articles.side_effect = Exception("API connection failed")
+    mock_guardian_api.return_value = mock_api_instance
+    
+    event = {'search_term': 'test'}
+    context = {}
+    
+    # Check that error is logged
+    with patch('src.extract.logger') as mock_logger:
+        with pytest.raises(Exception):
+            lambda_handler(event, context)
+        
+        # Verify logger.error was called with text containing failure info
+        mock_logger.error.assert_called()
+        error_message = mock_logger.error.call_args[0][0]
+        
+        # CloudWatch filter looks "Failed"
+        assert "failed" in error_message.lower() 
+
+# SQS message failure
 
 # API rate & Error messages logged
 # test_lambda_handler_logs_API_calls_

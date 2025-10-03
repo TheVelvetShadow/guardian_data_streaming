@@ -51,39 +51,45 @@ logger.setLevel(logging.INFO)
 
 # Lambda Handler - Gets Guardian articles and publishes to SQS queue
 def lambda_handler(event, context):
-    # Gets API Key
-    api_key = os.environ['GUARDIAN_API_KEY']
+    try:
+        logger.info("Starting Guardian Pipeline")    
+        # Gets API Key
+        api_key = os.environ['GUARDIAN_API_KEY']
 
-    # Calls Guardian API Class & Applies API Key
-    api = GuardianAPI(api_key)
+        # Calls Guardian API Class & Applies API Key
+        api = GuardianAPI(api_key)
+        
+        # Gets Search term, provides Northcoders as default
+        search_term = event.get('search_term', 'Northcoders') 
+
+        # Applies Search term 
+        articles = api.search_articles(search_term)
+
+        # Creates SQS client
+        sqs = boto3.client('sqs')
+
+        # Send search result to SQS
+        # send_message needs Queue url to send message to
+        # create SQS Queue
+        queue_url = os.environ.get('SQS_QUEUE_URL')
+
+        # Define message to be sent to SQS (article data as JSON string)
+        # This sends one SQS message per Article
+        for article in articles:
+            message_body = json.dumps({
+                'webPublicationDate': article['webPublicationDate'],
+                'webTitle': article['webTitle'],
+                'webUrl': article['webUrl']
+            })
+            # send message to Q
+            sqs.send_message(QueueUrl=queue_url, MessageBody=message_body)
+
+        # Provides read out of succesful function execution
+        return {'statusCode': 200, 'body': 'Success'}
     
-    # Gets Search term, provides Northcoders as default
-    search_term = event.get('search_term', 'Northcoders') 
-
-    # Applies Search term 
-    articles = api.search_articles(search_term)
-
-    # Creates SQS client
-    sqs = boto3.client('sqs')
-
-    # Send search result to SQS
-    # send_message needs Queue url to send message to
-    # create SQS Queue
-    queue_url = os.environ.get('SQS_QUEUE_URL')
-
-    # Define message to be sent to SQS (article data as JSON string)
-    # This sends one SQS message per Article
-    for article in articles:
-        message_body = json.dumps({
-            'webPublicationDate': article['webPublicationDate'],
-            'webTitle': article['webTitle'],
-            'webUrl': article['webUrl']
-        })
-        # send message to Q
-        sqs.send_message(QueueUrl=queue_url, MessageBody=message_body)
-
-    # Provides read out of succesful function execution
-    return {'statusCode': 200, 'body': 'Success'}
-   
+    except Exception as e:
+        # triggers Cloudwatch alarm
+        logger.error(f"Pipeline failed: {str(e)}")
+        raise
     
     
