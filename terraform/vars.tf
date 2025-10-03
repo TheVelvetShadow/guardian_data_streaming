@@ -69,9 +69,18 @@ variable "guardian_api_rate_limit" {
 
 
 ##### Cloudwatch ######
+# SQS messaging logs
 
-# log_retention_days (number) - CloudWatch log retention (14 days)
+variable "sqs_message_age_threshold" {
+  description = "Maximum age (seconds) for messages in queue before alarm"
+  type        = number
+  default     = 600  # 10 minutes
+}
+
+variable "sqs_queue_depth_threshold" {
+  description = "Maximum number of messages in queue before alarm"
+  type        = number
+  default     = 100
+}
 
 
-
-# enable_detailed_monitoring (bool) - Enable/disable detailed metrics

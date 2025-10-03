@@ -1,0 +1,3 @@
+guardian_api_key = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+sns_subscription_email = "youremail@somewhere.com"

@@ -550,3 +550,6 @@ def test_lambda_handler_logs_api_request(_mock_boto, mock_guardian_api, mock_log
     # Note - CloudWatch API filters logs for pattern "Making Guardian API call"
 
 
+# TODO: add test for API rate limiting in the lambda. Establishing MVP 1st
+
+
