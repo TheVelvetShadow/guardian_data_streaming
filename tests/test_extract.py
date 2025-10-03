@@ -5,6 +5,7 @@ import json
 from src.extract import GuardianAPI, lambda_handler
 from unittest.mock import patch, Mock
 import os
+import logging
 
 # ===== fixtures & variables =====
 # Fixtures of Guardian API responses used for mocking. Return raw response.
@@ -113,7 +114,6 @@ test_key = "test"
 
 
 ##### Guardian API Tests #####
-
 
 # ===== API Validation =====
 # Test 1 - test_API_Key_Validation:
@@ -365,24 +365,6 @@ def test_lambda_handler_creates_SQS_queue(mock_get, mock_boto, mock_guardian_api
     assert call_kwargs['QueueUrl'] == 'test-queue'
 
 
-
-    # Arrange
-    mock_response = Mock()
-    mock_response.json.return_value = mock_guardian_api_one_response
-    mock_get.return_value = mock_response
-
-    event = {'search_term': 'Warickshire'}
-
-    mock_sqs_client = Mock()
-    mock_boto.return_value = mock_sqs_client 
-
-    #Act
-    lambda_handler(event, None)
-    
-    #Assert
-    assert mock_sqs_client.send_message.call_count == 1
-
-
 @patch('src.extract.boto3.client')
 @patch.dict('os.environ', {'GUARDIAN_API_KEY': 'test-key', 'SQS_QUEUE_URL': 'test-queue'})
 @patch('src.extract.requests.get')
@@ -472,4 +454,16 @@ def test_lambda_handler_returns_success_response(mock_get, mock_boto, mock_guard
     assert result['statusCode'] == 200
     assert 'body' in result
 
+##### Error Handling #####
 # test_error_handling - need to define what this is. 
+# logger is setup
+def test_lambda_handler_has_logger_setup():
+    from src.extract import logger
+    
+    assert logger is not None
+    assert logger.level == logging.INFO
+
+# test_lambda_logs_error_messages():
+
+# API rate & Error messages logged
+# test_lambda_handler_logs_API_calls_

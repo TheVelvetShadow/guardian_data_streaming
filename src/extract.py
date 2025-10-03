@@ -4,6 +4,7 @@ from datetime import datetime
 import pprint
 import os
 import boto3
+import logging
 
 class GuardianAPI:
 
@@ -42,7 +43,9 @@ class GuardianAPI:
        
         return formatted_articles
     
-
+# Logging of API calls
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 

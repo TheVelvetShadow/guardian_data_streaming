@@ -23,3 +23,5 @@ output "sqs_queue_arn" {
   value       = aws_sqs_queue.guardian_articles_queue.arn
   description = "ARN of SQS queue"
 }
+
+# CloudWatch

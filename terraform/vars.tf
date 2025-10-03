@@ -63,7 +63,11 @@ variable "guardian_api_key" {
 }
 
 # api_rate_limit (number) - Max requests per day (50)
-
+variable "guardian_api_rate_limit" {
+  description = "Guardian API daily call limit"
+  type        = number
+  default     = 50
+}
 
 
 ##### Cloudwatch ######

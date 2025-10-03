@@ -1,27 +1,15 @@
-#################### ZIP THE LAMBDA FUNCTIONS ##############################################
+#################### ZIP THE LAMBDA FUNCTION ##############################################
 
 data "archive_file" "extract_lambda" {
   type        = "zip"
   source_file = "${path.module}/../src/extract.py"
-  output_path = "${path.module}/../deploy/lambdas/extract_lambda.zip"
+  output_path = "${path.module}/../deploy/lambdas/guardian_lambda.zip"
 }
 
-data "archive_file" "transform_lambda" {
-  type        = "zip"
-  source_file = "${path.module}/../src/transform.py"
-  output_path = "${path.module}/../deploy/lambdas/transform_lambda.zip"
-}
 
-data "archive_file" "load_lambda" {
-  type = "zip"
-  source_file = "${path.module}/../src/load.py"
-  output_path = "${path.module}/../deploy/lambdas/load_lambda.zip"
-} 
+####### LAMBDA FUNCTION #######
 
-
-#################### LAMBDA FUNCTIONS ########################################
-
-# Extract_lambda (writes to SQS)
+# Guardian_lambda (calls API and sends articles to SQS)
 resource "aws_lambda_function" "guardian_lambda" {
   filename         = data.archive_file.extract_lambda.output_path
   function_name    = "${var.project_name}"
@@ -53,4 +41,30 @@ resource "aws_lambda_function" "guardian_lambda" {
 
 }
 
- # CloudWatch
+##### CloudWatch #####
+
+ data "aws_iam_policy_document" "cloudwatch_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+    resources = [
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/*:*"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "cloudwatch_policy" {
+  name   = "guardian_cloudwatch_policy"
+  policy = data.aws_iam_policy_document.cloudwatch_policy.json
+}
+
+# Attach to Lambda Role
+resource "aws_iam_policy_attachment" "guardian_lambda_cloudwatch_attach" {
+  name       = "guardian_lambda_cloudwatch_attach"
+  roles      = [aws_iam_role.guardian_lambda_iam_role.name]
+  policy_arn = aws_iam_policy.cloudwatch_policy.arn
+}

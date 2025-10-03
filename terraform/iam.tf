@@ -1,3 +1,6 @@
+
+##### Lambda Roles #####
+
 data "aws_iam_policy_document" "lambda_assume_role_policy" {
   statement {
     effect = "Allow"
@@ -12,38 +15,44 @@ data "aws_iam_policy_document" "lambda_assume_role_policy" {
 }
 
 # Extract Lambda Role (gets Guardian articles, sends to SQS)
-resource "aws_iam_role" "extract_lambda_role" {
+resource "aws_iam_role" "guardian_lambda_role" {
   name                  = "${var.project_name}-extract-lambda-role"
   assume_role_policy    = data.aws_iam_policy_document.lambda_assume_role_policy.json
   # Terraform will automatically detach policies before deleting
   force_detach_policies = true
 
   tags = {
-    Name        = "Extract Lambda Role"
+    Name        = "Guardian Lambda Role"
     Project     = var.project_name
   }
 }
 
-# Transform Lambda Role (reads from SQS, transforms data)
-resource "aws_iam_role" "transform_lambda_role" {
-  name                  = "${var.project_name}-transform-lambda-role"
-  assume_role_policy    = data.aws_iam_policy_document.lambda_assume_role_policy.json
-  force_detach_policies = true
 
-  tags = {
-    Name        = "Transform Lambda Role"
-    Project     = var.project_name
+##### SQS Roles #####
+
+data "aws_iam_policy_document" "lambda_sqs_send" {
+  statement {
+    effect = "Allow"
+    
+    actions = [
+      "sqs:SendMessage",
+      "sqs:GetQueueUrl"
+    ]
+    
+    resources = [
+      aws_sqs_queue.guardian_articles_queue.arn
+    ]
   }
 }
 
-# Load Lambda Role (loads processed data to destination)
-resource "aws_iam_role" "load_lambda_role" {
-  name                  = "${var.project_name}-load-lambda"
-  assume_role_policy    = data.aws_iam_policy_document.lambda_assume_role_policy.json
-  force_detach_policies = true
-
-  tags = {
-    Name        = "Load Lambda Role"
-    Project     = var.project_name
-  }
+resource "aws_iam_policy" "lambda_sqs_send" {
+  name   = "${var.project_name}-lambda-sqs-send"
+  policy = data.aws_iam_policy_document.lambda_sqs_send.json
 }
+
+resource "aws_iam_role_policy_attachment" "guardian_lambda_sqs_send" {
+  role       = aws_iam_role.guardian_lambda_role.name
+  policy_arn = aws_iam_policy.lambda_sqs_send.arn
+}
+
+##### CloudWatch #####
