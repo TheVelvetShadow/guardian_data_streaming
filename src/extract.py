@@ -62,7 +62,7 @@ def lambda_handler(event, context):
 
         #logs for API Limit in CLoudwatch
         logger.info("Making Guardian API call")  
-        
+
         # Creates SQS client & Message Queue
         sqs = boto3.client('sqs')
         queue_url = os.environ.get('SQS_QUEUE_URL')
@@ -76,12 +76,11 @@ def lambda_handler(event, context):
             })
             sqs.send_message(QueueUrl=queue_url, MessageBody=message_body)
 
-        
         # Provides read out of succesful function execution
         return {'statusCode': 200, 'body': 'Success'}
     
     except Exception as e:
-        # triggers Cloudwatch alarm
+        # 'failed' triggers Cloudwatch alarm
         logger.error(f"Pipeline failed: {str(e)}")
         raise
     

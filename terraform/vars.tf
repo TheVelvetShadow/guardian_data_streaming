@@ -54,11 +54,11 @@ variable "lambda_runtime" {
 
 ##### API Variables #####
 
-# variable "guardian_api_key" {
-#   description = "The Guardian API key"
-#   type        = string
-#   sensitive   = true
-# }
+variable "guardian_api_key" {
+  description = "The Guardian API key"
+  type        = string
+  sensitive   = true
+}
 
 # api_rate_limit - Max requests per day (500)
 variable "guardian_api_rate_limit" {
@@ -71,4 +71,7 @@ variable "guardian_api_rate_limit" {
 ##### Cloudwatch ######
 
 # log_retention_days (number) - CloudWatch log retention (14 days)
+
+
+
 # enable_detailed_monitoring (bool) - Enable/disable detailed metrics

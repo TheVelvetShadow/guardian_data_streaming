@@ -1,6 +1,5 @@
-# To monitor:
-# can i capture API calls as a threshold?
 
+##### Lambda #####
 
 # filters for Lambda Error Alert Messages
 resource "aws_cloudwatch_log_metric_filter" "lambda_errors" {
@@ -81,5 +80,52 @@ resource "aws_cloudwatch_metric_alarm" "api_call_limit" {
 
   tags = {
     Project = "Guardian Data Streaming"
+  }
+}
+
+
+##### SQS Messaging logs #####
+
+# Alarm: Messages stuck in queue too long
+resource "aws_cloudwatch_metric_alarm" "sqs_message_age" {
+  alarm_name          = "${var.project_name}_sqs_message_age"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "ApproximateAgeOfOldestMessage"
+  namespace           = "AWS/SQS"
+  period              = 300  # 5 minutes
+  statistic           = "Maximum"
+  threshold           = 600  # 10 minutes
+  alarm_description   = "Alert when messages stuck in queue for >10 minutes"
+  alarm_actions       = [aws_sns_topic.lambda_alerts.arn]
+  
+  dimensions = {
+    QueueName = aws_sqs_queue.guardian_articles_queue.name
+  }
+
+  tags = {
+    Project = var.project_name
+  }
+}
+
+# Alarm: Queue has too many messages 
+resource "aws_cloudwatch_metric_alarm" "sqs_queue_length" {
+  alarm_name          = "${var.project_name}_sqs_queue_length"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "ApproximateNumberOfMessagesVisible"
+  namespace           = "AWS/SQS"
+  period              = 300
+  statistic           = "Average"
+  threshold           = 100  
+  alarm_description   = "Alert when queue has >100 messages waiting"
+  alarm_actions       = [aws_sns_topic.lambda_alerts.arn]
+  
+  dimensions = {
+    QueueName = aws_sqs_queue.guardian_articles_queue.name
+  }
+
+  tags = {
+    Project = var.project_name
   }
 }

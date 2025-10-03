@@ -55,4 +55,3 @@ resource "aws_iam_role_policy_attachment" "guardian_lambda_sqs_send" {
   policy_arn = aws_iam_policy.lambda_sqs_send.arn
 }
 
-##### CloudWatch #####
