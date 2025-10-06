@@ -20,6 +20,8 @@ resource "aws_lambda_function" "guardian_lambda" {
   runtime         = var.lambda_runtime
   timeout         = var.lambda_timeout
   memory_size     = var.lambda_memory
+  # adds lambda layer
+  layers          = [aws_lambda_layer_version.guardian_lambda_layer.arn]
 
   environment {
     variables = {
@@ -84,4 +86,14 @@ resource "aws_cloudwatch_log_group" "guardian_lambda_logs" {
   tags = {
     Project = var.project_name
   }
+}
+
+
+##### Lambda Layer #####
+
+resource "aws_lambda_layer_version" "guardian_lambda_layer" {
+  filename   = "${path.module}/../deploy/lambdas/guardian_lambda_layer.zip"
+  layer_name = "guardian_lambda_layer"  
+  source_code_hash = filebase64sha256("${path.module}/../deploy/lambdas/guardian_lambda_layer.zip")
+  compatible_runtimes = ["python3.9", "python3.11", "python3.12"]
 }
