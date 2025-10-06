@@ -16,15 +16,17 @@ variable "sqs_retention_seconds" {
   
   validation {
     condition     = var.sqs_retention_seconds >= 60 && var.sqs_retention_seconds <= 1209600
-    error_message = "SQS retention must be between 60 seconds (1 min) and 1209600 seconds (14 days)."
+    error_message = "SQS retention must be between 60 seconds and 1209600 seconds (14 days)."
   }
 }
 
 variable "sqs_queue_name" {
-  description = "Name of the SQS queue (will be prefixed with project name)"
+  description = "Name of the SQS queue - prefixed with project name"
   type        = string
   default     = "guardian-articles-queue"
 }
+
+
 
 
 ##### Lambda Vars #####
@@ -74,7 +76,7 @@ variable "guardian_api_rate_limit" {
 variable "sqs_message_age_threshold" {
   description = "Maximum age (seconds) for messages in queue before alarm"
   type        = number
-  default     = 600  # 10 minutes
+  default     = 600  
 }
 
 variable "sqs_queue_depth_threshold" {
@@ -83,4 +85,10 @@ variable "sqs_queue_depth_threshold" {
   default     = 100
 }
 
+# SNS error log email
+variable "sns_subscription_email" {
+  description = "email address for SNS subscription"
+  type        = string
+  sensitive   = true
+}
 

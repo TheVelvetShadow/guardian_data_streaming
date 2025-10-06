@@ -1,6 +1,6 @@
 #################### ZIP THE LAMBDA FUNCTION ##############################################
 
-data "archive_file" "extract_lambda" {
+data "archive_file" "guardian_lambda" {
   type        = "zip"
   source_file = "${path.module}/../src/extract.py"
   output_path = "${path.module}/../deploy/lambdas/guardian_lambda.zip"
@@ -11,12 +11,12 @@ data "archive_file" "extract_lambda" {
 
 # Guardian_lambda (calls API and sends articles to SQS)
 resource "aws_lambda_function" "guardian_lambda" {
-  filename         = data.archive_file.extract_lambda.output_path
+  filename         = data.archive_file.guardian_lambda.output_path
   function_name    = "${var.project_name}"
-  role            = aws_iam_role.extract_lambda_role.arn
+  role            = aws_iam_role.guardian_lambda_role.arn
   handler         = "extract.lambda_handler"
   # Changes hash so Terraform detects and deploys code changes
-  source_code_hash = data.archive_file.extract_lambda.output_base64sha256
+  source_code_hash = data.archive_file.guardian_lambda.output_base64sha256
   runtime         = var.lambda_runtime
   timeout         = var.lambda_timeout
   memory_size     = var.lambda_memory
@@ -36,7 +36,8 @@ resource "aws_lambda_function" "guardian_lambda" {
 
    depends_on = [
     aws_iam_role_policy_attachment.guardian_lambda_logging,
-    aws_iam_role_policy_attachment.guardian_lambda_sqs_send
+    aws_iam_role_policy_attachment.guardian_lambda_sqs_send,
+    aws_cloudwatch_log_group.guardian_lambda_logs
   ]
 
 }
@@ -62,9 +63,25 @@ resource "aws_iam_policy" "cloudwatch_policy" {
   policy = data.aws_iam_policy_document.cloudwatch_policy.json
 }
 
+resource "aws_iam_role_policy_attachment" "guardian_lambda_logging" {
+  role       = aws_iam_role.guardian_lambda_role.name
+  policy_arn = aws_iam_policy.cloudwatch_policy.arn
+}
+
+
 # Attach to Lambda Role
 resource "aws_iam_policy_attachment" "guardian_lambda_cloudwatch_attach" {
   name       = "guardian_lambda_cloudwatch_attach"
-  roles      = [aws_iam_role.guardian_lambda_iam_role.name]
+  roles      = [aws_iam_role.guardian_lambda_role.name]
   policy_arn = aws_iam_policy.cloudwatch_policy.arn
+}
+
+# CloudWatch Log Group
+resource "aws_cloudwatch_log_group" "guardian_lambda_logs" {
+  name              = "/aws/lambda/${var.project_name}"
+  retention_in_days = 7
+
+  tags = {
+    Project = var.project_name
+  }
 }
