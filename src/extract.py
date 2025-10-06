@@ -1,23 +1,20 @@
 import requests
 import json
-from datetime import datetime
-import pprint
 import os
 import boto3
 import logging
 
+
 class GuardianAPI:
 
     def __init__(self, api_key):
-            if not api_key:
-                raise ValueError("Valid API key is required")
-            self.api_key = api_key
-            # page-size limits to 10 articles as per brief
-            self.base_url = "https://content.guardianapis.com/search?order-by=newest&page-size=10"
-
+        if not api_key:
+            raise ValueError("Valid API key is required")
+        self.api_key = api_key
+        # page-size limits to 10 articles as per brief
+        self.base_url = "https://content.guardianapis.com/search?order-by=newest&page-size=10"
 
     def search_articles(self, query=str):
-
         # Adds API Key & Search Query to base url
         if query:
             url = f"{self.base_url}&q={query}&api-key={self.api_key}"
@@ -25,43 +22,43 @@ class GuardianAPI:
             url = f"{self.base_url}?api-key={self.api_key}"
 
         # Requests JSON response from API and presents in list of dictionaries
-        response = requests.get(url)    
+        response = requests.get(url, timeout=10)
         data = response.json()
         results = data["response"]["results"]
 
         # Formats JSON data
-        # Creates new dict from JSON response. 
+        # Creates new dict from JSON response.
         # Provides required fields "webPublicationDate", "webTitle", "webUrl"
         formatted_articles = []
 
         for article in results:
             formatted_articles.append({
-            "webPublicationDate": article["webPublicationDate"],
-            "webTitle": article["webTitle"],
-            "webUrl": article["webUrl"]
-        })
-       
+                "webPublicationDate": article["webPublicationDate"],
+                "webTitle": article["webTitle"],
+                "webUrl": article["webUrl"]
+            })
+
         return formatted_articles
-    
+
+
 # Logging of API calls
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
-
 # Lambda Handler - Gets Guardian articles and publishes to SQS queue
 def lambda_handler(event, context):
     try:
-        logger.info("Starting Guardian Pipeline")    
-        
+        logger.info("Starting Guardian Pipeline")
+
         # Connects & searches Guardian API
         api_key = os.environ['GUARDIAN_API_KEY']
         api = GuardianAPI(api_key)
-        search_term = event.get('search_term', 'Northcoders') 
+        search_term = event.get('search_term', 'Northcoders')
         articles = api.search_articles(search_term)
 
-        #logs for API Limit in CLoudwatch
-        logger.info("Making Guardian API call")  
+        # logs for API Limit in CLoudwatch
+        logger.info("Making Guardian API call")
 
         # Creates SQS client & Message Queue
         sqs = boto3.client('sqs')
@@ -78,10 +75,8 @@ def lambda_handler(event, context):
 
         # Provides read out of succesful function execution
         return {'statusCode': 200, 'body': 'Success'}
-    
+
     except Exception as e:
         # 'failed' triggers Cloudwatch alarm
         logger.error(f"Pipeline failed: {str(e)}")
         raise
-    
-    
