@@ -105,13 +105,15 @@ This installs all the Python libraries the project needs.
 
 ## **Configuration**
 
-### **1\. Set Up Your API Key**
+### **1\. Set Up Your API Key & Email**
 
-Create a file called `terraform.tfvars` in the `terraform` folder:
+Once you have your Guardian API key create a file called `terraform.tfvars` in the `terraform` folder:
 
 `guardian_api_key = "your-actual-api-key-here"`
 
 `sns_subscription_email = "your-email@example.com"`
+
+Add your email to be notified in case there are any issues with the application.
 
 There is a .tfvars.example file in the repo if you are unsure what this file should look like.  
 It is located here: [guardian\_data\_streaming](https://github.com/TheVelvetShadow/guardian_data_streaming/tree/main)/terraform/terraform.tfvars.example
@@ -196,7 +198,7 @@ After deployment, Terraform will display important information like your SQS que
 
 ## **How to Use**
 
-Our applications code is now stored in AWS as a Lambda function. This means we need to call our lambda function with the terms we wish to search for. You can do this either via your profile on the AWS website, or via the terminal.
+Our application code is now stored in AWS as a Lambda function. This means we need to call our lambda function with the terms we wish to search for (We need to send our search query to the application via a JSON file). You can do this either via your profile on the AWS website, or via the terminal.
 
 **Running the Lambda Function (our API search)**
 
@@ -219,20 +221,45 @@ Our applications code is now stored in AWS as a Lambda function. This means we n
 
 **From Command Line (using AWS CLI):**
 
-aws lambda invoke \\  
-  \--function-name guardian-streaming \\  
-  \--payload '{"search\_term": "artificial intelligence"}' \\  
-  response.json
+`aws lambda invoke` 
 
-### **Viewing Results**
+`--function-name guardian-streaming`
 
-**Check the SQS Queue:**
+`--cli-binary-format raw-in-base64-out`
+
+`--payload '{"search_term": "artificial intelligence"}'`
+
+`response.json`
+
+If you use the above code you will be creating a ‘payload’ JSON file which will be added to the project \- this is what we are searching for. There will be a response.json file that will be returned. This will not show the search results, but will show us the response has been successful. To view the result we need to look at the SQS queue.
+
+### **Viewing Search Results in the SQS Queue**
+
+The results are sent to AWS SQS Queue as a JSON file, ready to be consumed by other applications. Each result is sent to the Queue as a separate SQS message. If you want to change this you can do so following the ‘Change Message Settings’ guide below. To view messages: 
+
+**Check the SQS Queue in AWS console:**
 
 1. Go to AWS SQS in your browser  
 2. Find the queue named `guardian-streaming_articles`  
 3. Click "Send and receive messages"  
 4. Click "Poll for messages"  
 5. You'll see the articles that were found
+
+**Check the SQS Queue in Terminal:**
+
+*\# View sample messages (may return 1-10 messages per call)* 
+
+`aws sqs receive-message \`
+
+  `--queue-url <your SQS Queue URL HERE> \`
+
+  `--region eu-west-2 \`
+
+  `--max-number-of-messages 10 \`
+
+  `| jq -r '.Messages[].Body | fromjson'`
+
+\*Note \- it’s easier to view multiple messages in the AWS console.
 
 **Check CloudWatch Logs:**
 
@@ -241,13 +268,37 @@ aws lambda invoke \\
 3. Find `/aws/lambda/guardian-streaming`  
 4. Click on the most recent log stream
 
+**Change Message Settings**
+
+If you want to change the results into one message you will need to edit the code in src/extract.py line 68
+
+This code is responsible for putting each result into a single message:
+
+# This sends one SQS message per Article result
+        for article in articles:
+            message_body = json.dumps({
+                'webPublicationDate': article['webPublicationDate'],
+                'webTitle': article['webTitle'],
+                'webUrl': article['webUrl']
+            })
+            sqs.send_message(QueueUrl=queue_url, MessageBody=message_body)
+
+
+If you want one SQS for ALL articles you will need to remove the for loop. Replace lines 67 to 74 with this code:
+
+# This sends one SQS message for ALL Articles
+   message_body = json.dumps(articles)
+   sqs.send_message(QueueUrl=queue_url, MessageBody=message_body)
+
+You will need to rebuild Terraform if this change is made after deployment to AWS.    
+
 ---
 
  
 
-**Architecture![][image1]**
+**Architecture**
 
-See Architecture.png 
+See Architecture.png for a diagram of the architecture.
 
 **Flow:**
 
@@ -314,6 +365,10 @@ You'll receive email alerts (to the email address you added to .tfvars) when the
 
 All the python code has been unit tested. You can run and check the test as follows:
 
+**Setup Python Path**
+
+`export PYTHONPATH$=(pwd)`
+
 ### **Run All Tests**
 
 `pytest tests/` 
@@ -329,7 +384,8 @@ All the python code has been unit tested. You can run and check the test as foll
 ### **"Invalid API Key" Error**
 
 * Check your Guardian API key in `terraform.tfvars`  
-* Verify your API is active at https://open-platform.theguardian.com/explore/ \- The Guardian have an API search portal that you can manually test your key in. See  GuardianExploreAPI.png
+* Verify your API is active at https://open-platform.theguardian.com/explore/ \- The Guardian have an API search portal that you can manually test your key in. Highlighted in GuardianExploreAPI.png  
+  
 
 
 ### **"Access Denied" AWS Error**
@@ -372,4 +428,3 @@ Type `yes` when prompted. This deletes everything created by this project.
 **Bootcamp:** Data Engineering / Northcoders  
 **Author:** Matt Temperley  
 **Web:** https://www.matttemperley.com
-
