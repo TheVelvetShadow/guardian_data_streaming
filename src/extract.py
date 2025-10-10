@@ -12,14 +12,25 @@ class GuardianAPI:
             raise ValueError("Valid API key is required")
         self.api_key = api_key
         # Most recent results are returned first. page-size limits to 10 articles as per brief
-        self.base_url = "https://content.guardianapis.com/search?order-by=newest&page-size=10"
+        self.base_url = "https://content.guardianapis.com/search?"
+        
 
-    def search_articles(self, query=str):
-        # Adds API Key & Search Query to base url
-        if query:
-            url = f"{self.base_url}&q={query}&api-key={self.api_key}"
-        else:
-            url = f"{self.base_url}?api-key={self.api_key}"
+# https://content.guardianapis.com/search?section=content&from-date=2025-10-10&page-size=10&q=trump&api-key=test
+
+
+    def search_articles(self, query=None, date_from=None):
+        
+        # Builds APIAmend values here if you wish to
+        order_by = "order-by=newest"
+        page_size = "page-size=10"
+        
+        url = self.base_url
+        if date_from: 
+                url += f"from-date={date_from}&"
+        url += f"{order_by}&{page_size}"
+        if query:   
+            url += f"&q={query}"           
+        url += f"&api-key={self.api_key}"
 
         # Requests JSON response from API and presents in list of dictionaries
         response = requests.get(url)
@@ -64,7 +75,7 @@ def lambda_handler(event, context):
         sqs = boto3.client('sqs')
         queue_url = os.environ.get('SQS_QUEUE_URL')
 
-        # This sends one SQS message per Article
+        # This sends one SQS message per Article result
         for article in articles:
             message_body = json.dumps({
                 'webPublicationDate': article['webPublicationDate'],

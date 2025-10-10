@@ -135,11 +135,12 @@ def test_guardian_api_class_accepts_api_key():
 def test_returns_latest_articles_max(mock_get):
 
     client = GuardianAPI("test")
-    client.search_articles("Warickshire")
+    client.search_articles("trump", "")
 
     called_url = mock_get.call_args[0][0]
-
-    assert "?order-by=newest" in called_url
+    
+    assert "order-by=newest" in called_url
+    assert "https://content.guardianapis.com/search?order-by=newest&page-size=10&q=trump&api-key=test" in called_url 
 
 
 # Test 3 - tests request is limited to 10 articles
@@ -147,11 +148,12 @@ def test_returns_latest_articles_max(mock_get):
 def test_returns_10_articles_max(mock_get):
 
     client = GuardianAPI("test")
-    client.search_articles("Warickshire")
+    client.search_articles("trump", "")
 
     called_url = mock_get.call_args[0][0]
 
     assert "&page-size=10" in called_url
+    assert "https://content.guardianapis.com/search?order-by=newest&page-size=10&q=trump&api-key=test" in called_url
 
 
 # Test 4 - search query is added to url with api key
@@ -159,11 +161,12 @@ def test_returns_10_articles_max(mock_get):
 def test_search_query_added_to_url(mock_get):
 
     client = GuardianAPI("test")
-    client.search_articles("Warickshire")
+    client.search_articles("trump","")
 
     called_url = mock_get.call_args[0][0]
 
-    assert "&q=Warickshire" in called_url
+    assert "&q=trump" in called_url
+    assert "https://content.guardianapis.com/search?order-by=newest&page-size=10&q=trump&api-key=test" in called_url
 
 
 # Test 5 - api key is added to url
@@ -171,11 +174,12 @@ def test_search_query_added_to_url(mock_get):
 def test_api_key_added_to_url(mock_get):
 
     client = GuardianAPI("test")
-    client.search_articles("Warickshire")
+    client.search_articles("trump", "")
     called_url = mock_get.call_args[0][0]
 
-    # Check URL has API + &
+    # Check URL has API 
     assert "&api-key=test" in called_url
+    assert "https://content.guardianapis.com/search?order-by=newest&page-size=10&q=trump&api-key=test" in called_url
 
 
 # Test 5 - api key is added to url with no query
@@ -184,18 +188,25 @@ def test_api_key_added_to_url_with_no_query(mock_get):
 
     client = GuardianAPI("test")
     # No search query added
-    client.search_articles("")
+    client.search_articles("","")
     called_url = mock_get.call_args[0][0]
 
-    # Check URL has ?
-    assert "?api-key=test" in called_url
+    # Check URL 
+    assert "https://content.guardianapis.com/search?order-by=newest&page-size=10&api-key=test" in called_url
+    assert "&api-key=test" in called_url
 
 # Additional Features:
-
-
-@pytest.mark.skip
-def test_returns_publication_date_after_date_selected(mock_requests):
+# Date from search functionality
+@patch('src.extract.requests.get')
+def test_returns_publication_date_after_date_selected(mock_get):
     """Tests: publication date is after date_from value"""
+   
+    client = GuardianAPI("test")
+    client.search_articles("technology", "2025-10-01")
+
+    called_url = mock_get.call_args[0][0]
+
+    assert "https://content.guardianapis.com/search?from-date=2025-10-01&order-by=newest&page-size=10&q=technology&api-key=test" in called_url
 
 
 @pytest.mark.skip
