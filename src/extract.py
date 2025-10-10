@@ -11,7 +11,7 @@ class GuardianAPI:
         if not api_key:
             raise ValueError("Valid API key is required")
         self.api_key = api_key
-        # page-size limits to 10 articles as per brief
+        # Most recent results are returned first. page-size limits to 10 articles as per brief
         self.base_url = "https://content.guardianapis.com/search?order-by=newest&page-size=10"
 
     def search_articles(self, query=str):
@@ -22,7 +22,7 @@ class GuardianAPI:
             url = f"{self.base_url}?api-key={self.api_key}"
 
         # Requests JSON response from API and presents in list of dictionaries
-        response = requests.get(url, timeout=10)
+        response = requests.get(url)
         data = response.json()
         results = data["response"]["results"]
 
