@@ -15,39 +15,62 @@ class GuardianAPI:
         self.base_url = "https://content.guardianapis.com/search?"
         
 
-# https://content.guardianapis.com/search?section=content&from-date=2025-10-10&page-size=10&q=trump&api-key=test
-
-
     def search_articles(self, query=None, date_from=None):
         
-        # Builds APIAmend values here if you wish to
+        # Vars for building API request, adds vars to base URL -- amend values here if you wish to
         order_by = "order-by=newest"
+        # returns only articles
+        articles = "type=article"
+        # returns 10 articles
         page_size = "page-size=10"
         
+
         url = self.base_url
+        # Checks if date from value is provided
         if date_from: 
                 url += f"from-date={date_from}&"
-        url += f"{order_by}&{page_size}"
+
+        url += f"{order_by}&{articles}&{page_size}"
+        
         if query:   
-            url += f"&q={query}"           
+            url += f"&q={query}"
+        # Note - I found using the APIs "show-blocks" preferable over "show-fields" for parsing the text body
+        url += "&show-blocks=body"               
         url += f"&api-key={self.api_key}"
 
         # Requests JSON response from API and presents in list of dictionaries
         response = requests.get(url)
+        # Formats JSON data
         data = response.json()
+        # Creates new dict from JSON response.
         results = data["response"]["results"]
 
-        # Formats JSON data
-        # Creates new dict from JSON response.
-        # Provides required fields "webPublicationDate", "webTitle", "webUrl"
+
+        # var Provides required fields "webPublicationDate", "webTitle", "webUrl & "Content Preview"
         formatted_articles = []
 
         for article in results:
+            # iterate the results arr - list of dicts
+            # access the blocks key - value is dict
+            # access the body in blocks dict
+            # the blocks value is a list of dicts
+            # access the bodyTextSummary key
+            # used .get to avoid keyerrors
+
+            blocks = article.get("blocks", {})
+            body_blocks = blocks.get("body", [])    # access the body in blocks dict  - the body value is a list of dicts
+            
+            content_preview = ""
+            if body_blocks and len(body_blocks) > 0:
+                content_preview = body_blocks[0].get("bodyTextSummary", "")[:1000]  # access the bodyTextSummary key
+
             formatted_articles.append({
                 "webPublicationDate": article["webPublicationDate"],
                 "webTitle": article["webTitle"],
-                "webUrl": article["webUrl"]
+                "webUrl": article["webUrl"],
+                "contentPreview": content_preview
             })
+
 
         return formatted_articles
 
@@ -77,10 +100,14 @@ def lambda_handler(event, context):
 
         # This sends one SQS message per Article result
         for article in articles:
+            
+            
+            
             message_body = json.dumps({
                 'webPublicationDate': article['webPublicationDate'],
                 'webTitle': article['webTitle'],
-                'webUrl': article['webUrl']
+                'webUrl': article['webUrl'],
+                'contentPreview': article['contentPreview']
             })
             sqs.send_message(QueueUrl=queue_url, MessageBody=message_body)
 
