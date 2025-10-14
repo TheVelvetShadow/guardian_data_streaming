@@ -1,1 +1,1 @@
-{"statusCode": 200, "body": "Success"}
+{"statusCode": 200, "body": "{\"message\": \"Success\", \"articles_processed\": 10}"}

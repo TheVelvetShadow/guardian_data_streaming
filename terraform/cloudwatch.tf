@@ -71,7 +71,7 @@ resource "aws_cloudwatch_metric_alarm" "api_call_limit" {
   evaluation_periods  = 1
   metric_name         = "GuardianAPICallCount"
   namespace           = "GuardianApp"
-  period              = 86400  # 24 hours
+  period              = 86400 # 24 hours
   statistic           = "Sum"
   threshold           = var.guardian_api_rate_limit
   alarm_description   = "Guardian API daily limit reached"
@@ -93,12 +93,12 @@ resource "aws_cloudwatch_metric_alarm" "sqs_message_age" {
   evaluation_periods  = 2
   metric_name         = "ApproximateAgeOfOldestMessage"
   namespace           = "AWS/SQS"
-  period              = 300  # 5 minutes
+  period              = 300 # 5 minutes
   statistic           = "Maximum"
-  threshold           = 600  # 10 minutes
+  threshold           = 600 # 10 minutes
   alarm_description   = "Alert when messages stuck in queue for >10 minutes"
   alarm_actions       = [aws_sns_topic.lambda_alerts.arn]
-  
+
   dimensions = {
     QueueName = aws_sqs_queue.guardian_articles_queue.name
   }
@@ -117,10 +117,10 @@ resource "aws_cloudwatch_metric_alarm" "sqs_queue_length" {
   namespace           = "AWS/SQS"
   period              = 300
   statistic           = "Average"
-  threshold           = 100  
+  threshold           = 100
   alarm_description   = "Alert when queue has >100 messages waiting"
   alarm_actions       = [aws_sns_topic.lambda_alerts.arn]
-  
+
   dimensions = {
     QueueName = aws_sqs_queue.guardian_articles_queue.name
   }

@@ -112,7 +112,11 @@ def lambda_handler(event, context):
             sqs.send_message(QueueUrl=queue_url, MessageBody=message_body)
 
         # Provides read out of succesful function execution
-        return {'statusCode': 200, 'body': 'Success'}
+        return {'statusCode': 200,
+                'body': json.dumps({'message': 'Success',
+                                    'articles_processed': len(articles)
+                })
+}
 
     except Exception as e:
         # 'failed' triggers Cloudwatch alarm

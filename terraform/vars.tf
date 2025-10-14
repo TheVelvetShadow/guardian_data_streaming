@@ -12,8 +12,8 @@ variable "project_name" {
 variable "sqs_retention_seconds" {
   description = "SQS message retention period in seconds (3 days as per brief)"
   type        = number
-  default     = 259200  # 3 days (72 hours * 3600 seconds)
-  
+  default     = 259200 # 3 days (72 hours * 3600 seconds)
+
   validation {
     condition     = var.sqs_retention_seconds >= 60 && var.sqs_retention_seconds <= 1209600
     error_message = "SQS retention must be between 60 seconds and 1209600 seconds (14 days)."
@@ -76,7 +76,7 @@ variable "guardian_api_rate_limit" {
 variable "sqs_message_age_threshold" {
   description = "Maximum age (seconds) for messages in queue before alarm"
   type        = number
-  default     = 600  
+  default     = 600
 }
 
 variable "sqs_queue_depth_threshold" {

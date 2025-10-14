@@ -16,14 +16,14 @@ data "aws_iam_policy_document" "lambda_assume_role_policy" {
 
 # Extract Lambda Role (gets Guardian articles, sends to SQS)
 resource "aws_iam_role" "guardian_lambda_role" {
-  name                  = "${var.project_name}-extract-lambda-role"
-  assume_role_policy    = data.aws_iam_policy_document.lambda_assume_role_policy.json
+  name               = "${var.project_name}-extract-lambda-role"
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role_policy.json
   # Terraform will automatically detach policies before deleting
   force_detach_policies = true
 
   tags = {
-    Name        = "Guardian Lambda Role"
-    Project     = var.project_name
+    Name    = "Guardian Lambda Role"
+    Project = var.project_name
   }
 }
 
@@ -33,12 +33,12 @@ resource "aws_iam_role" "guardian_lambda_role" {
 data "aws_iam_policy_document" "lambda_sqs_send" {
   statement {
     effect = "Allow"
-    
+
     actions = [
       "sqs:SendMessage",
       "sqs:GetQueueUrl"
     ]
-    
+
     resources = [
       aws_sqs_queue.guardian_articles_queue.arn
     ]

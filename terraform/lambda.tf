@@ -11,17 +11,17 @@ data "archive_file" "guardian_lambda" {
 
 # Guardian_lambda (calls API and sends articles to SQS)
 resource "aws_lambda_function" "guardian_lambda" {
-  filename         = data.archive_file.guardian_lambda.output_path
-  function_name    = "${var.project_name}"
-  role            = aws_iam_role.guardian_lambda_role.arn
-  handler         = "extract.lambda_handler"
+  filename      = data.archive_file.guardian_lambda.output_path
+  function_name = var.project_name
+  role          = aws_iam_role.guardian_lambda_role.arn
+  handler       = "extract.lambda_handler"
   # Changes hash so Terraform detects and deploys code changes
   source_code_hash = data.archive_file.guardian_lambda.output_base64sha256
-  runtime         = var.lambda_runtime
-  timeout         = var.lambda_timeout
-  memory_size     = var.lambda_memory
+  runtime          = var.lambda_runtime
+  timeout          = var.lambda_timeout
+  memory_size      = var.lambda_memory
   # adds lambda layer
-  layers          = [aws_lambda_layer_version.guardian_lambda_layer.arn]
+  layers = [aws_lambda_layer_version.guardian_lambda_layer.arn]
 
   environment {
     variables = {
@@ -32,11 +32,11 @@ resource "aws_lambda_function" "guardian_lambda" {
   }
 
   tags = {
-    Name        = "Guardian API to SQS"
-    Project     = var.project_name
+    Name    = "Guardian API to SQS"
+    Project = var.project_name
   }
 
-   depends_on = [
+  depends_on = [
     aws_iam_role_policy_attachment.guardian_lambda_logging,
     aws_iam_role_policy_attachment.guardian_lambda_sqs_send,
     aws_cloudwatch_log_group.guardian_lambda_logs
@@ -46,7 +46,7 @@ resource "aws_lambda_function" "guardian_lambda" {
 
 ##### CloudWatch #####
 
- data "aws_iam_policy_document" "cloudwatch_policy" {
+data "aws_iam_policy_document" "cloudwatch_policy" {
   statement {
     effect = "Allow"
     actions = [
@@ -92,8 +92,8 @@ resource "aws_cloudwatch_log_group" "guardian_lambda_logs" {
 ##### Lambda Layer #####
 
 resource "aws_lambda_layer_version" "guardian_lambda_layer" {
-  filename   = "${path.module}/../deploy/lambdas/guardian_lambda_layer.zip"
-  layer_name = "guardian_lambda_layer"  
-  source_code_hash = filebase64sha256("${path.module}/../deploy/lambdas/guardian_lambda_layer.zip")
+  filename            = "${path.module}/../deploy/lambdas/guardian_lambda_layer.zip"
+  layer_name          = "guardian_lambda_layer"
+  source_code_hash    = filebase64sha256("${path.module}/../deploy/lambdas/guardian_lambda_layer.zip")
   compatible_runtimes = ["python3.9", "python3.11", "python3.12"]
 }
