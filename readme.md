@@ -360,10 +360,19 @@ The system automatically monitors:
 
 1. **Lambda Errors** \- Alerts when the function fails  
 2. **API Call Limit** \- Warns when approaching 500 calls/day  
-3. **SQS Message Age** \- Alerts if messages aren't being processed  
+3. **SQS Message Age** \- Alerts if messages aren't being processed ( current threshold is >10 mins - this alarm currently triggers, and will until messages are consumed by your pipeline)
 4. **SQS Queue Depth** \- Warns if queue has \>100 messages
 
 You'll receive email alerts (to the email address you added to .tfvars) when these thresholds are reached.
+
+
+If you wish to increase the SQS Message Threshold, it is in cloudwatch.tf in the following code block:
+
+      resource "aws_cloudwatch_metric_alarm" "sqs_message_age" {
+      alarm_name          = "${var.project_name}_sqs_message_age"
+      threshold           = 600  # Change from 600 (10 min) 
+      # ... rest of config
+      }
 
 ### **Checking Logs**
 
@@ -400,7 +409,6 @@ All the python code has been unit tested. You can run and check the test as foll
 * Check your Guardian API key in `terraform.tfvars`  
 * Verify your API is active at https://open-platform.theguardian.com/explore/ \- The Guardian have an API search portal that you can manually test your key in. Highlighted in GuardianExploreAPI.png  
   
-
 
 ### **"Access Denied" AWS Error**
 
