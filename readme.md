@@ -18,11 +18,12 @@ A Python application that retrieves articles from The Guardian API and publishes
 
 ## **Overview**
 
-This project was created for Northcoders, as part of the Tech Returners Skills Bootcamp. It's a data streaming application that searches The Guardian newspaper's API for articles matching specific terms. The user search terms are:
+This project was created for Northcoders, as part of the Tech Returners Skills Bootcamp. It's a data streaming application that searches The Guardian newspaper's API for articles matching specific terms. 
+The user search terms are:
 Keyword: e.g "machine learning" and a 
 Date from: e.g "2025-10-01"
 
-Set terms:
+API's search parameters:
 Content type: articles,
 Ordered by: Newest
 No. of articles: Latest 10

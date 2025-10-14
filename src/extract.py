@@ -37,7 +37,7 @@ class GuardianAPI:
         url += "&show-blocks=body"
         url += f"&api-key={self.api_key}"
 
-        # Requests JSON response from API and presents in list of dictionaries
+        # Requests JSON response from API and presents in list of dictionaries. Timeout to 30secs for bandit security (prevents lambda hanging indefinatley).
         response = requests.get(url, timeout=30)
         # Formats JSON data
         data = response.json()
