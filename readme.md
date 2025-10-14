@@ -20,7 +20,7 @@ A Python application that retrieves articles from The Guardian API and publishes
 
 This project was created for Northcoders, as part of the Tech Returners Skills Bootcamp. It's a data streaming application that searches The Guardian newspaper's API for articles matching specific terms. 
 The user search terms are:
-Keyword: e.g "machine learning" and a 
+Keyword: e.g "machine learning" 
 Date from: e.g "2025-10-01"
 
 API's search parameters:
@@ -301,8 +301,8 @@ This code is responsible for putting each result into a single message:
 If you want one SQS for ALL articles you will need to remove the for loop. Replace lines 67 to 74 with this code:
 
 # This sends one SQS message for ALL Articles
-   message_body = json.dumps(articles)
-   sqs.send_message(QueueUrl=queue_url, MessageBody=message_body)
+      message_body = json.dumps(articles)
+      sqs.send_message(QueueUrl=queue_url, MessageBody=message_body)
 
 You will need to rebuild Terraform if this change is made after deployment to AWS.    
 
@@ -346,8 +346,8 @@ See Architecture.png for a diagram of the architecture.
 │  
 ├── requirements.txt            		\# Python dependencies  
 ├── .gitignore                 		\# Files to exclude from Git  
-├── .flake8				\# PEP8 Compliance settings  
-├── README.md                  	\# This file  
+├── .flake8				               \# PEP8 Compliance settings  
+├── README.md                  	   \# This file  
 └── Streaming Data Project DE.pdf	\# Project Brief
 
 ## ---
@@ -409,7 +409,7 @@ All the python code has been unit tested. You can run and check the test as foll
 
 ### **Lambda Timeout**
 
-* Default timeout is 300 seconds (5 minutes)  
+* Default timeout is 30 seconds 
 * Check CloudWatch logs for the specific error
 
 ### **No Articles Found**
