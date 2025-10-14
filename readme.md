@@ -1,6 +1,6 @@
 # **Guardian Data Streaming**
 
-A Python application that retrieves articles from The Guardian API and publishes them to an AWS SQS messenger service for consumption by other applications.
+A Python application that retrieves articles from The Guardian API and publishes them to an AWS SQS messenger service for consumption by other applications. 
 
 ## **Table of Contents**
 
@@ -18,7 +18,17 @@ A Python application that retrieves articles from The Guardian API and publishes
 
 ## **Overview**
 
-This project was created for Northcoders, as part of the Tech Returners Skills Bootcamp. It's a data streaming application that searches The Guardian newspaper's API for articles matching specific terms. The results are sent to an AWS message queue (SQS) where they can be processed by other users, such as marketing and careers teams. All code PEP8 compliant, unit tested, and tested for security vulnerabilities.
+This project was created for Northcoders, as part of the Tech Returners Skills Bootcamp. It's a data streaming application that searches The Guardian newspaper's API for articles matching specific terms. The user search terms are:
+Keyword: e.g "machine learning" and a 
+Date from: e.g "2025-10-01"
+
+Set terms:
+Content type: articles,
+Ordered by: Newest
+No. of articles: Latest 10
+Content Preview: 1000 characters of the main article.
+
+The results are sent to an AWS message queue (SQS) where they can be processed by other users, such as marketing and careers teams. All code PEP8 compliant, unit tested, and tested for security vulnerabilities.
 
 **What the application does:**
 
@@ -204,6 +214,8 @@ Our application code is now stored in AWS as a Lambda function. This means we ne
 
 **From AWS Website / Console:**
 
+We can search via a single search term AND date from
+
 1. Go to AWS   
 2. Search for the AWS Lambda in your browser  
 3. Find the function named `guardian-streaming`  
@@ -212,7 +224,8 @@ Our application code is now stored in AWS as a Lambda function. This means we ne
 
 `{`
 
-  `"search_term": "technology"`
+  `"search_term": "technology",`
+   `"date_from": "2025-10-01"`
 
 `}`
 
@@ -227,11 +240,11 @@ Our application code is now stored in AWS as a Lambda function. This means we ne
 
 `--cli-binary-format raw-in-base64-out`
 
-`--payload '{"search_term": "artificial intelligence"}'`
+`--payload '{"search_term": "artificial intelligence", "date_from": "2025-09-20"}'`
 
 `response.json`
 
-If you use the above code you will be creating a ‘payload’ JSON file which will be added to the project \- this is what we are searching for. There will be a response.json file that will be returned. This will not show the search results, but will show us the response has been successful. To view the result we need to look at the SQS queue.
+If you use the above code you will be creating a ‘payload’ JSON file which will be added to the project \- it will contain the terms that we are searching for. This search will return a response.json file. The response.json will show us if the APIs response to our search has been successful. To view the article search results we need to look at the SQS queue.
 
 ### **Viewing Search Results in the SQS Queue**
 

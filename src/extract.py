@@ -13,38 +13,36 @@ class GuardianAPI:
         self.api_key = api_key
         # Most recent results are returned first. page-size limits to 10 articles as per brief
         self.base_url = "https://content.guardianapis.com/search?"
-        
 
     def search_articles(self, query=None, date_from=None):
-        
+
         # Vars for building API request, adds vars to base URL -- amend values here if you wish to
         order_by = "order-by=newest"
         # returns only articles
         articles = "type=article"
         # returns 10 articles
         page_size = "page-size=10"
-        
 
         url = self.base_url
         # Checks if date from value is provided
-        if date_from: 
-                url += f"from-date={date_from}&"
+        if date_from:
+            url += f"from-date={date_from}&"
 
         url += f"{order_by}&{articles}&{page_size}"
-        
-        if query:   
+
+        if query:
             url += f"&q={query}"
-        # Note - I found using the APIs "show-blocks" preferable over "show-fields" for parsing the text body
-        url += "&show-blocks=body"               
+        # Note - I found using the APIs "show-blocks" preferable over
+        # "show-fields" for parsing the text body
+        url += "&show-blocks=body"
         url += f"&api-key={self.api_key}"
 
         # Requests JSON response from API and presents in list of dictionaries
-        response = requests.get(url)
+        response = requests.get(url, timeout=30)
         # Formats JSON data
         data = response.json()
         # Creates new dict from JSON response.
         results = data["response"]["results"]
-
 
         # var Provides required fields "webPublicationDate", "webTitle", "webUrl & "Content Preview"
         formatted_articles = []
@@ -58,11 +56,13 @@ class GuardianAPI:
             # used .get to avoid keyerrors
 
             blocks = article.get("blocks", {})
-            body_blocks = blocks.get("body", [])    # access the body in blocks dict  - the body value is a list of dicts
-            
+            # access the body in blocks dict  - the body value is a list of dicts
+            body_blocks = blocks.get("body", [])
+
             content_preview = ""
             if body_blocks and len(body_blocks) > 0:
-                content_preview = body_blocks[0].get("bodyTextSummary", "")[:1000]  # access the bodyTextSummary key
+                content_preview = body_blocks[0].get("bodyTextSummary", "")[
+                    :1000]  # access the bodyTextSummary key
 
             formatted_articles.append({
                 "webPublicationDate": article["webPublicationDate"],
@@ -70,7 +70,6 @@ class GuardianAPI:
                 "webUrl": article["webUrl"],
                 "contentPreview": content_preview
             })
-
 
         return formatted_articles
 
@@ -100,9 +99,7 @@ def lambda_handler(event, context):
 
         # This sends one SQS message per Article result
         for article in articles:
-            
-            
-            
+
             message_body = json.dumps({
                 'webPublicationDate': article['webPublicationDate'],
                 'webTitle': article['webTitle'],
@@ -115,8 +112,8 @@ def lambda_handler(event, context):
         return {'statusCode': 200,
                 'body': json.dumps({'message': 'Success',
                                     'articles_processed': len(articles)
-                })
-}
+                                    })
+                }
 
     except Exception as e:
         # 'failed' triggers Cloudwatch alarm
